@@ -9,4 +9,4 @@
 
 
 ----
-[Experiment 1](./Lab/Exp1/index.html)
+[Experiment 1](https://anujsharma32.github.io/Backend-Development/Lab/Exp1/)
