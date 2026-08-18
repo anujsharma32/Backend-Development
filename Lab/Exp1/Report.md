@@ -9,4 +9,4 @@
 
 
 ----
-[Experiment 1](./Lab/Exp%201/index.html)
+[Experiment 1](./Lab/Exp1/index.html)
