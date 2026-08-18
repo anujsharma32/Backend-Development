@@ -9,4 +9,4 @@
 
 
 ----
-[Experiment 1](./Lab/Exp 1/Report.md)
+[Experiment 1](./Lab/exp1/Report.md)
