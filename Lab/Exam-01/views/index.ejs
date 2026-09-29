@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>My Notes</title>
+
+    <link rel="stylesheet" href="/style.css">
+</head>
+
+<body>
+
+    <div class="container">
+
+        <div class="header">
+            <div>
+                <h1>My Notes</h1>
+                <p>Notes Management Application</p>
+            </div>
+
+            <a href="/notes/new" class="btn">
+                + Add Note
+            </a>
+        </div>
+
+
+        <% if (notes.length === 0) { %>
+
+            <div class="empty">
+                <h2>No notes available</h2>
+                <p>Start by creating your first note.</p>
+
+                <a href="/notes/new" class="btn">
+                    Create Note
+                </a>
+            </div>
+
+        <% } else { %>
+
+            <div class="notes-grid">
+
+                <% notes.forEach(note => { %>
+
+                    <div class="note-card">
+
+                        <h2><%= note.title %></h2>
+
+                        <span class="category">
+                            <%= note.category %>
+                        </span>
+
+                        <p class="content">
+                            <%= note.content %>
+                        </p>
+
+                        <div class="note-footer">
+
+                            <small>
+                                Created:
+                                <%= new Date(note.createdAt).toLocaleString() %>
+                            </small>
+
+                            <form
+                                action="/notes/<%= note._id %>/delete"
+                                method="POST"
+                            >
+                                <button
+                                    type="submit"
+                                    class="delete-btn"
+                                >
+                                    Delete
+                                </button>
+                            </form>
+
+                        </div>
+
+                    </div>
+
+                <% }) %>
+
+            </div>
+
+        <% } %>
+
+    </div>
+
+</body>
+</html>
