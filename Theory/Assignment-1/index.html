@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notes App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app">
+
+        <header>
+            <div>
+                <h1>Notes</h1>
+                <p>Your notes, saved locally.</p>
+            </div>
+
+            <button id="themeBtn" class="theme-btn">🌙</button>
+        </header>
+
+        <section class="note-input">
+
+            <input
+                type="text"
+                id="noteInput"
+                placeholder="Write a new note..."
+                maxlength="500"
+            >
+
+            <select id="categoryInput">
+                <option value="General">General</option>
+                <option value="College">College</option>
+                <option value="Work">Work</option>
+                <option value="Personal">Personal</option>
+                <option value="Important">Important</option>
+            </select>
+
+            <button id="addBtn">Add Note</button>
+
+        </section>
+
+        <section class="tools">
+
+            <input
+                type="text"
+                id="searchInput"
+                placeholder="Search notes..."
+            >
+
+            <select id="filterInput">
+                <option value="all">All Notes</option>
+                <option value="active">Incomplete</option>
+                <option value="completed">Completed</option>
+            </select>
+
+            <button id="exportBtn">Export</button>
+
+            <label class="import-btn">
+                Import
+                <input type="file" id="importInput" accept=".json">
+            </label>
+
+        </section>
+
+        <div class="stats">
+            <span id="noteCount">0 notes</span>
+        </div>
+
+        <main id="notesList"></main>
+
+        <div id="emptyMessage" class="empty">
+            <h2>No notes yet</h2>
+            <p>Add your first note above.</p>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
