@@ -1,3 +1,10 @@
 .DS_Store
 .DS_Store
 .DS_Store
+
+# Python virtual environments
+venv/
+.venv/
+
+# Node.js dependencies
+node_modules/
