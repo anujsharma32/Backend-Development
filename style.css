@@ -488,7 +488,7 @@ a {
 
     display: grid;
 
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 160px 1fr;
 
     background: #ffffff;
 
@@ -508,18 +508,59 @@ a {
 
 .experiment-number {
 
-    padding: 35px;
+    padding: 35px 20px;
 
-    font-size: 40px;
+    font-size: 34px;
 
     font-weight: 800;
 
     color: #2563eb;
 
     border-right: 1px solid #d8d8d4;
-    white-space: nowrap;
 
-   
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+}
+
+
+.experiment-number.exam-number {
+
+    flex-direction: column;
+
+    justify-content: center;
+
+    gap: 3px;
+
+    line-height: 1;
+
+    text-align: center;
+
+}
+
+
+.experiment-number.exam-number span:first-child {
+
+    font-size: 11px;
+
+    letter-spacing: 2px;
+
+    font-weight: 700;
+
+    color: #777777;
+
+}
+
+
+.experiment-number.exam-number span:last-child {
+
+    font-size: 32px;
+
+    font-weight: 800;
+
+    color: #2563eb;
+
 }
 
 
@@ -675,11 +716,41 @@ a {
 }
 
 
-.project span {
+.project span,
+.project-links a {
 
     font-size: 12px;
 
     font-weight: 700;
+
+}
+
+
+.project-links {
+
+    margin-top: auto;
+
+    display: flex;
+
+    flex-wrap: wrap;
+
+    gap: 16px;
+
+}
+
+
+.project-links a {
+
+    color: #111111;
+
+    transition: color 0.2s ease;
+
+}
+
+
+.project-links a:hover {
+
+    color: #2563eb;
 
 }
 
