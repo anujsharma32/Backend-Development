@@ -136,7 +136,7 @@ Theory Experiment 05 demonstrates server-side rendering in Python using FastAPI 
 **Ans:** Jinja2 compiles templates on the server before transmitting finished HTML to the browser (SSR), whereas standard React/Vue apps send a JavaScript bundle to the browser which renders the DOM on the client's machine (CSR).
 
 **Q3: What template tags does Jinja2 use for variable interpolation and control structures?**  
-**Ans:** Jinja2 uses `{{ variable }}` for outputting expressions and variables, `{% for ... %}` or `{% if ... %}` for control logic, and `{# comment #}` for template comments.
+**Ans:** Jinja2 uses `&#123;&#123; variable &#125;&#125;` for outputting expressions and variables, `&#123;% for ... %&#125;` or `&#123;% if ... %&#125;` for control logic, and `&#123;# comment #&#125;` for template comments.
 
 **Q4: How does FastAPI specify that an endpoint returns HTML rather than default JSON?**  
 **Ans:** By specifying `response_class=HTMLResponse` in the route decorator, which sets the `Content-Type` header to `text/html`.
