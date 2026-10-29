@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 03: Progressive Express.js Server Architecture and EJS Templating | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Lecture1/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 03: Progressive Express.js Server Architecture and EJS Templating</h1>
+<h2>1. Aim</h2>
+<p>To study and implement a progressive, step-by-step backend architecture in Node.js and Express.js through five staged tasks covering basic server instantiation, multi-route handling, JSON REST API construction, dynamic programmatic HTML generation, and view rendering with the EJS template engine.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To initialize an Express.js application and bind it to a TCP network port (Task 1).</li>
+<li>To define multiple route endpoints returning plain text responses (Task 2).</li>
+<li>To construct a RESTful JSON API using route path parameters (<code>req.params.id</code>) and HTTP error statuses (Task 3).</li>
+<li>To dynamically synthesize HTML document fragments on the server and return them to the client (Task 4).</li>
+<li>To integrate the Embedded JavaScript (EJS) template engine for clean Model-View-Controller separation (Task 5).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime Environment</strong>: Node.js (v16.x or higher)</li>
+<li><strong>Framework</strong>: Express.js (<code>^4.18.2</code>)</li>
+<li><strong>Templating Engine</strong>: EJS (<code>^3.1.9</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Express.js provides an abstraction over Node's low-level <code>http</code> module, streamlining request dispatching and response generation:</p>
+<ol>
+<li><strong>Evolution of Web Response Types</strong>:
+   - <em>Plain Text / Strings</em>: Simple debugging outputs transmitted with <code>text/plain</code> or <code>text/html</code>.
+   - <em>JSON (JavaScript Object Notation)</em>: Lightweight data-interchange format ideal for headless APIs and decoupled single-page applications. <code>res.json()</code> automatically serializes objects and sets <code>Content-Type: application/json</code>.
+   - <em>String Concatenated HTML</em>: Generating HTML tags within route strings. While functional for small tasks, it tightly couples presentation with business logic and becomes unmaintainable.
+   - <em>Template Engines (EJS)</em>: Decouples HTML markup (views) from application routing logic (controllers). Templates compile dynamic data into final HTML on the server before transmitting it to the client.</li>
+<li><strong>Route Parameters</strong>:
+   Parameters defined as <code>:id</code> capture dynamic values from the request URI path, enabling specific resource lookups (e.g., <code>/students/2</code>).</li>
+<li><strong>HTTP Status Codes</strong>:
+   When resources cannot be resolved, servers communicate the failure using appropriate HTTP response codes (such as <code>404 Not Found</code>).</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment is organized in <code>Theory/Lecture1/express-demo/</code> into five progressive stages:</p>
+<h3>Task 1 — Basic Express Server (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/task1/server.js">task1/server.js</a>)</h3>
+<p>Sets up the fundamental Express server listening on port 3000:</p>
+<pre><code class="language-javascript">const express = require(&quot;express&quot;);
+const app = express();
+
+app.get(&quot;/&quot;, (req, res) =&gt; {
+    res.send(&quot;Backend Server Running&quot;);
+});
+
+app.listen(3000, () =&gt; {
+    console.log(&quot;Server started at http://localhost:3000&quot;);
+});
+</code></pre>
+<h3>Task 2 — Multiple Routes (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/task2/server.js">task2/server.js</a>)</h3>
+<p>Demonstrates route branching:
+- <code>GET /</code>: Returns <code>"Welcome to the Student Management API"</code>
+- <code>GET /students</code>: Returns <code>"List of all students"</code>
+- <code>GET /students/1</code>: Returns <code>"Student: Aarav, Roll No: 1"</code></p>
+<h3>Task 3 — JSON API &amp; Dynamic Route Parameters (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/task3/server.js">task3/server.js</a>)</h3>
+<p>Implements an in-memory database and JSON serialization with parameter extraction:</p>
+<pre><code class="language-javascript">const students = [
+    { id: 1, name: &quot;Aarav&quot;, branch: &quot;CSE&quot; },
+    { id: 2, name: &quot;Diya&quot;, branch: &quot;ECE&quot; },
+    { id: 3, name: &quot;Rohan&quot;, branch: &quot;IT&quot; }
+];
+
+app.get(&quot;/students&quot;, (req, res) =&gt; res.json(students));
+
+app.get(&quot;/students/:id&quot;, (req, res) =&gt; {
+    const student = students.find(s =&gt; s.id === parseInt(req.params.id));
+    if (student) {
+        res.json(student);
+    } else {
+        res.status(404).json({ error: &quot;Student not found&quot; });
+    }
+});
+</code></pre>
+<h3>Task 4 — Server-Side Dynamic HTML Generation (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/task4/server.js">task4/server.js</a>)</h3>
+<p>Constructs dynamic HTML strings directly within route handlers:
+- Loops over <code>students</code> and dynamically concatenates <code>&lt;li&gt;</code> tags into an HTML response.</p>
+<h3>Task 5 — View Engine Integration with EJS (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/task5/server.js">task5/server.js</a>)</h3>
+<p>Configures the EJS view engine:</p>
+<pre><code class="language-javascript">app.set(&quot;view engine&quot;, &quot;ejs&quot;);
+
+app.get(&quot;/&quot;, (req, res) =&gt; {
+    res.render(&quot;home&quot;);
+});
+
+app.get(&quot;/students&quot;, (req, res) =&gt; {
+    res.render(&quot;students&quot;, { students: students });
+});
+</code></pre>
+<ul>
+<li><strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/views/home.ejs">views/home.ejs</a></strong>: Welcome landing page with links to student listings.</li>
+<li><strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture1/express-demo/views/students.ejs">views/students.ejs</a></strong>: Formatted HTML table rendering student records using <code>&lt;% students.forEach(...) %&gt;</code>.</li>
+</ul>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the project directory:
+   <code>bash
+   cd Theory/Lecture1/express-demo</code></li>
+<li>Install dependencies:
+   <code>bash
+   npm install</code></li>
+<li>To test any specific task, execute its server script from the demo root:
+   - <strong>Task 1</strong>: <code>node task1/server.js</code>
+   - <strong>Task 2</strong>: <code>node task2/server.js</code>
+   - <strong>Task 3</strong>: <code>node task3/server.js</code>
+   - <strong>Task 4</strong>: <code>node task4/server.js</code>
+   - <strong>Task 5</strong>: <code>node task5/server.js</code></li>
+<li>Open <code>http://localhost:3000</code> in your browser for each task to evaluate the progressive enhancement from plain text to JSON, raw HTML, and templated EJS views.</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Task 1 (<code>/</code>)</strong>: Displays <code>"Backend Server Running"</code> in browser window.</li>
+<li><strong>Task 2 (<code>/students</code>)</strong>: Displays <code>"List of all students"</code>.</li>
+<li><strong>Task 3 (<code>/students</code>)</strong>:
+  <code>json
+  [
+    { "id": 1, "name": "Aarav", "branch": "CSE" },
+    { "id": 2, "name": "Diya", "branch": "ECE" },
+    { "id": 3, "name": "Rohan", "branch": "IT" }
+  ]</code></li>
+<li><strong>Task 3 (<code>/students/99</code>)</strong>: Returns HTTP 404 with <code>{ "error": "Student not found" }</code>.</li>
+<li><strong>Task 4 (<code>/students</code>)</strong>: Displays an unstyled HTML unordered list containing student names and branches.</li>
+<li><strong>Task 5 (<code>/students</code>)</strong>: Renders a complete HTML page with a styled table listing all student records dynamically compiled via EJS.</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Traced the architectural progression from basic text responses to structured JSON APIs and server-rendered HTML.</li>
+<li>Learned how to parse and sanitize dynamic URL route parameters.</li>
+<li>Understood proper HTTP error handling and status code conventions.</li>
+<li>Implemented clean separation of presentation and application logic using EJS templates.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 03 provides a comprehensive roadmap of server-side web development with Node.js and Express. It demonstrates that as web applications grow in complexity, adopting templating engines like EJS ensures scalable, clean, and maintainable software architecture.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: Why is <code>parseInt()</code> necessary when reading <code>req.params.id</code> in <code>task3</code>?</strong><br />
+<strong>Ans:</strong> Route parameters extracted from URL paths are always received as JavaScript strings. To compare them with integer identifiers (e.g., <code>s.id === 1</code>), the string must be explicitly parsed to an integer.</p>
+<p><strong>Q2: What is the primary disadvantage of concatenating HTML strings directly in route handlers as in <code>task4</code>?</strong><br />
+<strong>Ans:</strong> It violates separation of concerns, makes code difficult to read and maintain, lacks syntax highlighting/linting for HTML, and increases vulnerability to injection attacks.</p>
+<p><strong>Q3: How does <code>res.json()</code> differ from <code>res.send()</code>?</strong><br />
+<strong>Ans:</strong> While <code>res.send()</code> can accept strings, buffers, or objects, <code>res.json()</code> explicitly formats the response as JSON, sets <code>Content-Type: application/json</code>, and properly serializes null, undefined, and non-primitive objects.</p>
+<p><strong>Q4: Where does Express look for EJS view templates by default?</strong><br />
+<strong>Ans:</strong> Express looks in the <code>./views</code> directory located in the application's root working directory, unless overridden using <code>app.set("views", path)</code>.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

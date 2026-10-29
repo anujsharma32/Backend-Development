@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 04: Session Management and Authentication Lifecycle with Express.js | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Sessions/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 04: Session Management and Authentication Lifecycle with Express.js</h1>
+<h2>1. Aim</h2>
+<p>To study, implement, and analyze server-side session management in Node.js and Express.js using the <code>express-session</code> middleware, demonstrating session initialization, state persistence across requests, authenticated profile access, and secure session destruction.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the mechanics of stateful session management over stateless HTTP connections.</li>
+<li>To configure the <code>express-session</code> middleware with custom parameters including secret signing keys, resave strategies, and cookie expiration timeframes.</li>
+<li>To implement a simulated login workflow establishing session state (<code>req.session.username</code>).</li>
+<li>To enforce access control by checking session variables prior to granting access to protected routes (<code>/profile</code>).</li>
+<li>To terminate active sessions cleanly using <code>req.session.destroy()</code> upon logout.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime Environment</strong>: Node.js</li>
+<li><strong>Framework</strong>: Express.js (<code>^4.18.2</code>)</li>
+<li><strong>Middleware</strong>: <code>express-session</code> (<code>^1.17.3</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser with Developer Tools (Application / Storage tab), cURL / Postman</li>
+</ul>
+<h2>4. Theory</h2>
+<p>HTTP is a stateless communication protocol; the web server processes each incoming request in isolation without remembering previous transactions. In web applications requiring user logins, shopping carts, or personalization, statefulness must be established:</p>
+<ol>
+<li><strong>How Sessions Function</strong>:
+   - When a user accesses an application, the server generates a unique <strong>Session Identifier (SID)</strong>.
+   - The session data itself is maintained on the server (by default in memory).
+   - The SID is transmitted to the client's browser inside a <code>Set-Cookie</code> HTTP response header.
+   - On subsequent requests, the browser sends this cookie back in the <code>Cookie</code> request header.
+   - The server inspects the incoming SID, matches it against its session store, and attaches the stored data to <code>req.session</code>.</li>
+<li><strong>Session Options</strong>:
+   - <code>secret</code>: A private cryptographic key used to sign the session ID cookie, preventing client-side forgery.
+   - <code>resave: false</code>: Avoids resaving the session to the store if it was never modified during the request.
+   - <code>saveUninitialized: true</code>: Forces an uninitialized session to be saved to the store.
+   - <code>cookie.maxAge</code>: Specifies the cookie's lifetime in milliseconds (e.g., <code>60000</code> ms = 1 minute), after which the browser automatically deletes the cookie.</li>
+<li><strong>Session Lifecycle Operations</strong>:
+   - <em>Creation</em>: Initializing properties on <code>req.session</code> (e.g., <code>req.session.username = 'JohnDoe'</code>).
+   - <em>Validation / Access</em>: Reading <code>req.session.username</code> to authorize or deny access.
+   - <em>Destruction</em>: Calling <code>req.session.destroy()</code> deletes the session record from the server store.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment is implemented in <code>Theory/Sessions/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Sessions/package.json">package.json</a></strong>: Declares dependencies for <code>express</code> and <code>express-session</code>.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Sessions/app.js">app.js</a></strong>:
+  Full application server:</p>
+<p>```javascript
+  const express = require('express');
+  const session = require('express-session');
+  const app = express();</p>
+<p>// Middleware to handle sessions
+  app.use(session({
+    secret: 'mySecretKey',       // used to sign session ID cookies
+    resave: false,               // do not save if not modified
+    saveUninitialized: true,     // save new sessions
+    cookie: { maxAge: 60000 }    // cookie expiry: 1 minute
+  }));</p>
+<p>// Set session variable (Simulate Login)
+  app.get('/login', (req, res) =&gt; {
+    req.session.username = 'JohnDoe';
+    res.send('Session started for ' + req.session.username);
+  });</p>
+<p>// Access session data (Protected Profile)
+  app.get('/profile', (req, res) =&gt; {
+    if (req.session.username) {
+      res.send('Welcome ' + req.session.username);
+    } else {
+      res.send('Please log in first.');
+    }
+  });</p>
+<p>// Destroy session (Logout)
+  app.get('/logout', (req, res) =&gt; {
+    req.session.destroy(err =&gt; {
+      if (err) return res.send('Error destroying session');
+      res.send('Session destroyed successfully');
+    });
+  });</p>
+<p>app.listen(3000, () =&gt; console.log('Server running on port 3000'));
+  ```</p>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the project directory:
+   <code>bash
+   cd Theory/Sessions</code></li>
+<li>Install project dependencies:
+   <code>bash
+   npm install</code></li>
+<li>Start the Express server:
+   <code>bash
+   node app.js</code></li>
+<li>Verify execution in a web browser:
+   - Visit <code>http://localhost:3000/profile</code> before logging in.<ul>
+<li><em>Expected</em>: The server responds with <code>"Please log in first."</code></li>
+<li>Visit <code>http://localhost:3000/login</code> to initiate a session.</li>
+<li><em>Expected</em>: The server responds with <code>"Session started for JohnDoe"</code>.</li>
+<li>Open Chrome DevTools (<code>F12</code>), navigate to <strong>Application &gt; Storage &gt; Cookies &gt; http://localhost:3000</strong>, and observe the cookie named <code>connect.sid</code>.</li>
+<li>Revisit <code>http://localhost:3000/profile</code>.</li>
+<li><em>Expected</em>: The server recognizes the active session and displays <code>"Welcome JohnDoe"</code>.</li>
+<li>Visit <code>http://localhost:3000/logout</code>.</li>
+<li><em>Expected</em>: The server displays <code>"Session destroyed successfully"</code>.</li>
+<li>Revisit <code>http://localhost:3000/profile</code>.</li>
+<li><em>Expected</em>: Access is denied; displays <code>"Please log in first."</code></li>
+</ul>
+</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Unauthenticated Access (<code>GET /profile</code>)</strong>:
+  Returns: <code>"Please log in first."</code> (Session is inactive or absent).</li>
+<li><strong>Session Initialization (<code>GET /login</code>)</strong>:
+  Returns: <code>"Session started for JohnDoe"</code>.
+  Browser stores signed cookie: <code>connect.sid=s%3A...</code>.</li>
+<li><strong>Authenticated Access (<code>GET /profile</code>)</strong>:
+  Returns: <code>"Welcome JohnDoe"</code>.</li>
+<li><strong>Session Termination (<code>GET /logout</code>)</strong>:
+  Returns: <code>"Session destroyed successfully"</code>.</li>
+<li><strong>Session Expiration</strong>:
+  After 60 seconds of inactivity, subsequent visits to <code>/profile</code> revert to <code>"Please log in first."</code> due to <code>maxAge: 60000</code>.</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood the architecture and security aspects of web sessions and cookies.</li>
+<li>Configured and deployed <code>express-session</code> middleware in an Express application.</li>
+<li>Implemented stateful authentication workflows (login, profile authorization, logout).</li>
+<li>Inspected session cookies (<code>connect.sid</code>) using browser developer tools.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 04 demonstrates the fundamental principles of session management in web development. By maintaining user state on the server and synchronizing it with the client via a signed cookie, stateless HTTP communication is successfully adapted for secure user authentication flows.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the purpose of the <code>connect.sid</code> cookie created by <code>express-session</code>?</strong><br />
+<strong>Ans:</strong> <code>connect.sid</code> holds the cryptographically signed Session Identifier. The browser sends this cookie on every request, allowing the server to look up and restore the corresponding session data stored in memory or a database.</p>
+<p><strong>Q2: What happens when the <code>maxAge</code> duration expires?</strong><br />
+<strong>Ans:</strong> When <code>maxAge</code> is reached, the client browser automatically purges the cookie, and subsequent requests from that client will no longer transmit the session ID, causing the server to treat the user as unauthenticated.</p>
+<p><strong>Q3: How does session-based authentication differ from token-based authentication (like JWT)?</strong><br />
+<strong>Ans:</strong> In session-based authentication, user state is stored on the server and identified by a cookie SID. In token-based authentication (JWT), all claims are encoded into a self-contained, digitally signed token stored entirely on the client, allowing the server to remain completely stateless.</p>
+<p><strong>Q4: Why is signing the session cookie with a secret key crucial?</strong><br />
+<strong>Ans:</strong> Cookie signing prevents malicious users from tampering with or forging the session ID. If an attacker alters the cookie value, the server's cryptographic verification fails, and the counterfeit session is rejected.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

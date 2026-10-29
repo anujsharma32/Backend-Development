@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 13A: MongoDB and Mongoose ODM Integration | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/mongoose-demo/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 13A: MongoDB and Mongoose ODM Integration</h1>
+<h2>1. Aim</h2>
+<p>To develop a backend web application using Node.js, Express.js, MongoDB, and Mongoose Object Data Modeling (ODM) to demonstrate database connection management, schema definition, model creation, user registration with duplicate key validation, credential verification (login), and document querying.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To establish an asynchronous connection between an Express application and a MongoDB database using Mongoose (<code>mongoose.connect</code>).</li>
+<li>To define strongly typed database schemas with validation rules (<code>required</code>, <code>unique</code>, <code>default</code>) using <code>mongoose.Schema</code>.</li>
+<li>To instantiate and compile Mongoose Models for collection-level database operations.</li>
+<li>To implement user registration (<code>POST /signup</code>) with error handling for duplicate key constraints (MongoServerError E11000).</li>
+<li>To implement authentication verification (<code>POST /login</code>) using document queries (<code>User.findOne</code>).</li>
+<li>To retrieve and render stored user collections (<code>GET /users</code>) using <code>User.find()</code>.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime</strong>: Node.js (v16.x or higher)</li>
+<li><strong>Framework</strong>: Express.js (<code>^4.18.2</code>)</li>
+<li><strong>ODM Library</strong>: Mongoose (<code>^8.0.0</code>)</li>
+<li><strong>Database</strong>: MongoDB (Local standalone instance running at <code>mongodb://localhost:27017</code> or MongoDB Atlas URI)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>MongoDB is a document-oriented NoSQL database that stores data in flexible, JSON-like BSON (Binary JSON) documents. Mongoose is an Object Data Modeling (ODM) library for MongoDB and Node.js that provides a schema-based solution to model application data:</p>
+<ol>
+<li><strong>Schemas vs Models</strong>:
+   - <em>Schema</em>: Defines the structure of the document, default values, validators, and data types.
+   - <em>Model</em>: A wrapper on the Mongoose schema that provides an interface to the database for creating, querying, updating, and deleting records.</li>
+<li><strong>Schema Constraints &amp; Validations</strong>:
+   Mongoose provides built-in validation options:
+   - <code>required: true</code>: Ensures the field cannot be omitted or null.
+   - <code>unique: true</code>: Directs MongoDB to create a unique index ensuring no two documents share the same value. If violated, MongoDB throws an <code>E11000</code> duplicate key error.</li>
+<li><strong>Mongoose Query Methods</strong>:
+   - <code>save()</code>: Asynchronously persists a document instance to the database collection.
+   - <code>findOne(conditions)</code>: Finds and returns the first single document matching the specified criteria.
+   - <code>find()</code>: Retrieves all documents in the collection matching query criteria.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment is implemented in <code>Lab/mongoose-demo/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/mongoose-demo/package.json">package.json</a></strong>: Declares dependencies for <code>express</code> and <code>mongoose</code>.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/mongoose-demo/server.js">server.js</a></strong>:</p>
+<ol>
+<li>
+<p><strong>Database Connection</strong>:
+     ```javascript
+     const DB_URL = 'mongodb://localhost:27017/userdb';</p>
+<p>mongoose.connect(DB_URL)
+   .then(() =&gt; console.log('Connected to MongoDB successfully'))
+   .catch(err =&gt; console.error('MongoDB connection error:', err));
+ ```</p>
+</li>
+<li>
+<p><strong>Schema &amp; Model Definition</strong>:
+     ```javascript
+     const userSchema = new mongoose.Schema({
+       username: {
+         type: String,
+         required: true,
+         unique: true
+       },
+       email: {
+         type: String,
+         required: true,
+         unique: true
+       },
+       password: {
+         type: String,
+         required: true
+       },
+       createdAt: {
+         type: Date,
+         default: Date.now
+       }
+     });</p>
+<p>const User = mongoose.model('User', userSchema);
+ ```</p>
+</li>
+<li>
+<p><strong>Application Routes</strong>:</p>
+<ul>
+<li><code>GET /</code>: Serves an HTML page featuring registration, login, and user listing forms.</li>
+<li><code>POST /signup</code>: Extracts user input, instantiates a <code>new User()</code>, and saves it. Handles error code <code>11000</code> explicitly:
+   <code>javascript
+   app.post('/signup', async (req, res) =&gt; {
+     try {
+       const { username, email, password } = req.body;
+       const newUser = new User({ username, email, password });
+       await newUser.save();
+       res.send(`&lt;h2 class="success"&gt;User registered successfully!&lt;/h2&gt;...`);
+     } catch (error) {
+       if (error.code === 11000) {
+         res.send(`&lt;h2 class="error"&gt;Error: Username or email already exists&lt;/h2&gt;...`);
+       } else {
+         res.send(`&lt;h2 class="error"&gt;Error: ${error.message}&lt;/h2&gt;...`);
+       }
+     }
+   });</code></li>
+<li><code>POST /login</code>: Validates user existence and password equivalence:
+   <code>javascript
+   app.post('/login', async (req, res) =&gt; {
+     try {
+       const { username, password } = req.body;
+       const user = await User.findOne({ username });
+       if (!user) return res.send(`&lt;h2 class="error"&gt;User not found&lt;/h2&gt;...`);
+       if (user.password !== password) return res.send(`&lt;h2 class="error"&gt;Incorrect password&lt;/h2&gt;...`);
+       res.send(`&lt;h2 class="success"&gt;Login successful!&lt;/h2&gt;...`);
+     } catch (error) {
+       res.send(`&lt;h2 class="error"&gt;Error: ${error.message}&lt;/h2&gt;...`);
+     }
+   });</code></li>
+<li><code>GET /users</code>: Fetches and lists all users using <code>await User.find()</code>.</li>
+</ul>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Ensure a local MongoDB daemon (<code>mongod</code>) is running or configure a valid MongoDB Atlas connection string in <code>server.js</code>:
+   <code>bash
+   # Check if MongoDB is running locally
+   brew services list  # on macOS with Homebrew
+   # or: mongosh</code></li>
+<li>Navigate to the experiment directory:
+   <code>bash
+   cd Lab/mongoose-demo</code></li>
+<li>Install project dependencies:
+   <code>bash
+   npm install</code></li>
+<li>Start the Express server:
+   <code>bash
+   node server.js</code>
+   Verify console outputs:
+   <code>Server running on http://localhost:3000
+   Connected to MongoDB successfully</code></li>
+<li>Open <code>http://localhost:3000</code> in a browser:
+   - Register a user via the registration form.
+   - Attempt to register the exact same username or email to verify duplicate constraint detection.
+   - Log in using valid and invalid credentials.
+   - Click "Show All Registered Users" to view all records in the collection.</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Console Log</strong>: Confirms MongoDB connectivity: <code>"Connected to MongoDB successfully"</code>.</li>
+<li><strong>User Registration</strong>:</li>
+<li>Success: Displays <em>"User registered successfully!"</em> alongside username and email.</li>
+<li>Duplicate Submission: Displays <em>"Error: Username or email already exists"</em>.</li>
+<li><strong>Authentication</strong>:</li>
+<li>Valid Credentials: Displays <em>"Login successful!"</em>, welcoming the user and showing account creation date.</li>
+<li>Invalid Credentials: Accurately identifies whether user was not found or if the password was incorrect.</li>
+<li><strong>User Listing</strong>: Renders an unordered HTML list with all registered users formatted as:
+  <code>Username: &lt;name&gt; | Email: &lt;email&gt; | Joined: &lt;Date&gt;</code>.</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood NoSQL database paradigms and document storage architecture.</li>
+<li>Gained practical expertise integrating Mongoose ODM within an Express.js server.</li>
+<li>Mastered asynchronous database operations using modern JavaScript <code>async</code>/<code>await</code>.</li>
+<li>Implemented robust error handling for database schema constraints and duplicate key errors.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Experiment 13A establishes the end-to-end integration of Node.js, Express, and MongoDB using Mongoose. The experiment confirms that Mongoose schemas provide structural integrity and data validation to otherwise schema-less NoSQL databases.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the primary role of an Object Data Modeling (ODM) library like Mongoose?</strong><br />
+<strong>Ans:</strong> Mongoose acts as an abstraction layer between Node.js and MongoDB. It provides schema validation, type casting, query building, business logic hooks (middleware), and model instantiation for structured document handling.</p>
+<p><strong>Q2: What is the significance of error code 11000 in MongoDB?</strong><br />
+<strong>Ans:</strong> Error code 11000 represents a duplicate key error, which occurs when an operation attempts to insert or update a document with a value that violates a unique index constraint (such as duplicate <code>username</code> or <code>email</code>).</p>
+<p><strong>Q3: How does <code>findOne()</code> differ from <code>find()</code> in Mongoose?</strong><br />
+<strong>Ans:</strong> <code>findOne()</code> returns a single document object matching the criteria (or <code>null</code>), while <code>find()</code> returns an array containing all matching documents (or an empty array if none match).</p>
+<p><strong>Q4: In a production environment, why should passwords not be stored as plain text strings as done in this demonstration?</strong><br />
+<strong>Ans:</strong> Storing plain text passwords exposes user credentials to catastrophic security breaches. Passwords should always be securely hashed using salted one-way hashing algorithms such as <code>bcrypt</code> or <code>Argon2</code> before persistence.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

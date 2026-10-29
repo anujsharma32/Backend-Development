@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 01: RESTful API Development with FastAPI and Pydantic | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/FastAPI/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 01: RESTful API Development with FastAPI and Pydantic</h1>
+<h2>1. Aim</h2>
+<p>To design, implement, and document a high-performance RESTful web API for student record management using Python, the FastAPI framework, Pydantic data schemas, and the Uvicorn ASGI web server.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the architecture of modern asynchronous Python web frameworks using ASGI (Asynchronous Server Gateway Interface).</li>
+<li>To define strongly typed data models and request validation schemas using Pydantic <code>BaseModel</code>.</li>
+<li>To implement standard RESTful HTTP methods (GET, POST, PUT, DELETE) for resource lifecycle management.</li>
+<li>To handle dynamic URL path parameters and optional query parameters (<code>Query</code>) with type safety and filtering.</li>
+<li>To utilize appropriate HTTP status codes (200 OK, 201 Created, 204 No Content, 404 Not Found) and standard error handling with <code>HTTPException</code>.</li>
+<li>To explore automatic OpenAPI/Swagger interactive API documentation generated by FastAPI.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language</strong>: Python (v3.8 or higher)</li>
+<li><strong>Framework</strong>: FastAPI</li>
+<li><strong>Data Validation</strong>: Pydantic</li>
+<li><strong>ASGI Web Server</strong>: Uvicorn</li>
+<li><strong>HTTP Client / Testing</strong>: Postman, cURL, or FastAPI interactive Swagger UI (<code>/docs</code>)</li>
+<li><strong>Editor</strong>: Visual Studio Code</li>
+</ul>
+<h2>4. Theory</h2>
+<p>FastAPI is a modern, high-performance web framework for building APIs with Python based on standard Python type hints:</p>
+<ol>
+<li><strong>ASGI vs WSGI</strong>:
+   Traditional Python frameworks (such as Flask and Django) historically used WSGI (Web Server Gateway Interface), which is synchronous. FastAPI is built on Starlette and uses ASGI, providing native support for asynchronous event-loop concurrency.</li>
+<li><strong>Pydantic Schemas</strong>:
+   Pydantic performs data parsing and runtime validation using Python type annotations. It automatically validates incoming JSON payloads, rejects malformed inputs with 422 Unprocessable Entity errors, and serializes output responses according to <code>response_model</code> definitions.</li>
+<li><strong>RESTful Architecture Principles</strong>:
+   - Resources are represented by nouns in URIs (<code>/students</code>).
+   - HTTP verbs dictate actions:<ul>
+<li><code>GET</code>: Retrieve resource(s).</li>
+<li><code>POST</code>: Create a new resource.</li>
+<li><code>PUT</code>: Replace or update an existing resource.</li>
+<li><code>DELETE</code>: Remove a resource.</li>
+<li>Status codes clearly reflect transaction outcomes (<code>201</code> for creation, <code>204</code> for successful deletion with no body, <code>404</code> for missing entities).</li>
+</ul>
+</li>
+<li><strong>Interactive Documentation</strong>:
+   FastAPI parses route definitions, Pydantic models, and type hints to automatically generate OpenAPI schemas accessible via Swagger UI (<code>/docs</code>) and ReDoc (<code>/redoc</code>).</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The project resides in <code>Theory/FastAPI/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/FastAPI/fastapi-project/main.py">fastapi-project/main.py</a></strong>:
+  Full application source code implementing models and endpoints:</p>
+<ol>
+<li>
+<p><strong>Data Models</strong>:
+     ```python
+     from pydantic import BaseModel
+     from typing import Optional, List</p>
+<p>class Student(BaseModel):
+     id: int
+     name: str
+     branch: str</p>
+<p>class StudentCreate(BaseModel):
+     name: str
+     branch: str
+ ```</p>
+</li>
+<li>
+<p><strong>In-Memory Storage</strong>:
+     <code>python
+     students: List[Student] = [
+         Student(id=1, name="Anuj", branch="CSE"),
+         Student(id=2, name="Diya", branch="ECE"),
+         Student(id=3, name="Rohan", branch="IT"),
+     ]
+     next_id = 4</code></p>
+</li>
+<li>
+<p><strong>REST Endpoints</strong>:</p>
+<ul>
+<li><code>GET /students</code>: Lists all students, with optional branch filtering:
+   <code>python
+   @app.get("/students", response_model=List[Student])
+   def list_students(branch: Optional[str] = Query(None)):
+       if branch:
+           return [s for s in students if s.branch.upper() == branch.upper()]
+       return students</code></li>
+<li><code>GET /students/{student_id}</code>: Fetches a single student by ID or raises 404:
+   <code>python
+   @app.get("/students/{student_id}", response_model=Student)
+   def get_student(student_id: int):
+       for student in students:
+           if student.id == student_id:
+               return student
+       raise HTTPException(status_code=404, detail="Student not found")</code></li>
+<li><code>POST /students</code>: Inserts a new student record returning status 201:
+   <code>python
+   @app.post("/students", response_model=Student, status_code=201)
+   def create_student(student: StudentCreate):
+       global next_id
+       new_student = Student(id=next_id, **student.model_dump())
+       students.append(new_student)
+       next_id += 1
+       return new_student</code></li>
+<li><code>PUT /students/{student_id}</code>: Updates name and branch of an existing student record:
+   <code>python
+   @app.put("/students/{student_id}", response_model=Student)
+   def update_student(student_id: int, student: StudentCreate):
+       for i, existing in enumerate(students):
+           if existing.id == student_id:
+               updated = Student(id=student_id, **student.model_dump())
+               students[i] = updated
+               return updated
+       raise HTTPException(status_code=404, detail="Student not found")</code></li>
+<li><code>DELETE /students/{student_id}</code>: Deletes student record returning status 204:
+   <code>python
+   @app.delete("/students/{student_id}", status_code=204)
+   def delete_student(student_id: int):
+       for i, student in enumerate(students):
+           if student.id == student_id:
+               students.pop(i)
+               return
+       raise HTTPException(status_code=404, detail="Student not found")</code></li>
+</ul>
+</li>
+<li>
+<p><strong>Server Execution</strong>:
+     <code>python
+     if __name__ == "__main__":
+         uvicorn.run("main:app", host="127.0.0.1", port=5000, reload=True)</code></p>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the project directory:
+   <code>bash
+   cd Theory/FastAPI/fastapi-project</code></li>
+<li>Set up and activate a Python virtual environment:
+   <code>bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate</code></li>
+<li>Install required packages:
+   <code>bash
+   pip install fastapi uvicorn pydantic</code></li>
+<li>Start the development server:
+   <code>bash
+   python main.py
+   # Alternatively: uvicorn main:app --host 127.0.0.1 --port 5000 --reload</code></li>
+<li>Test the API:
+   - Interactive Swagger Documentation: Visit <code>http://127.0.0.1:5000/docs</code> in a web browser.
+   - List students:
+     <code>bash
+     curl -X GET http://127.0.0.1:5000/students</code>
+   - Filter by branch:
+     <code>bash
+     curl -X GET "http://127.0.0.1:5000/students?branch=CSE"</code>
+   - Create student:
+     <code>bash
+     curl -X POST http://127.0.0.1:5000/students \
+          -H "Content-Type: application/json" \
+          -d '{"name": "Priya", "branch": "CSE"}'</code>
+   - Update student:
+     <code>bash
+     curl -X PUT http://127.0.0.1:5000/students/1 \
+          -H "Content-Type: application/json" \
+          -d '{"name": "Anuj Sharma", "branch": "AI"}'</code>
+   - Delete student:
+     <code>bash
+     curl -X DELETE http://127.0.0.1:5000/students/3</code></li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Swagger UI (<code>/docs</code>)</strong>:
+  Generates interactive API documentation displaying all routes, request schemas, status codes, and test consoles.</li>
+<li><strong>GET All Students (<code>/students</code>)</strong>:
+  <code>json
+  [
+    { "id": 1, "name": "Anuj", "branch": "CSE" },
+    { "id": 2, "name": "Diya", "branch": "ECE" },
+    { "id": 3, "name": "Rohan", "branch": "IT" }
+  ]</code></li>
+<li><strong>Query Filter (<code>/students?branch=ECE</code>)</strong>:
+  <code>json
+  [
+    { "id": 2, "name": "Diya", "branch": "ECE" }
+  ]</code></li>
+<li><strong>POST <code>/students</code> (Create)</strong>:
+  Returns HTTP status <code>201 Created</code> with newly assigned <code>id: 4</code>:
+  <code>json
+  { "id": 4, "name": "Priya", "branch": "CSE" }</code></li>
+<li><strong>DELETE <code>/students/3</code></strong>:
+  Returns HTTP status <code>204 No Content</code> with an empty response body.</li>
+<li><strong>Error Handling (<code>GET /students/99</code>)</strong>:
+  Returns HTTP status <code>404 Not Found</code>:
+  <code>json
+  { "detail": "Student not found" }</code></li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood modern asynchronous Python web API development with FastAPI.</li>
+<li>Implemented robust data validation and schema serialization using Pydantic.</li>
+<li>Designed standardized REST endpoints utilizing path parameters, query filters, and HTTP status codes.</li>
+<li>Utilized automated OpenAPI documentation tools for testing and client integration.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 01 demonstrates the design and execution of a production-grade RESTful API using FastAPI and Pydantic. It highlights how Python type annotations combined with ASGI servers achieve high execution speed, automatic data validation, and self-documenting API architectures.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: How does FastAPI achieve higher performance compared to traditional frameworks like Flask?</strong><br />
+<strong>Ans:</strong> FastAPI is built on Starlette and Pydantic, running on the ASGI standard with Uvicorn. It supports native asynchronous (<code>async</code>/<code>await</code>) non-blocking I/O and compiles data validation models directly via Python type hints.</p>
+<p><strong>Q2: What is the purpose of Pydantic models in FastAPI?</strong><br />
+<strong>Ans:</strong> Pydantic models define expected request and response data structures, automatically parse and validate input data types, return clear error messages on invalid input, and serialize Python objects into JSON.</p>
+<p><strong>Q3: What HTTP status code is returned when a Pydantic validation error occurs?</strong><br />
+<strong>Ans:</strong> FastAPI automatically returns HTTP <code>422 Unprocessable Entity</code> with a detailed JSON response detailing which fields failed validation and why.</p>
+<p><strong>Q4: Why is HTTP status 204 used for DELETE operations instead of 200?</strong><br />
+<strong>Ans:</strong> HTTP <code>204 No Content</code> indicates that the server successfully fulfilled the request and that there is no additional content to send in the response payload.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

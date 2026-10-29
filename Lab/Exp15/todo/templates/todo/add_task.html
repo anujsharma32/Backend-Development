@@ -1,0 +1,32 @@
+
+{% extends 'todo/base.html' %}
+
+{% block title %}Add Task | Task Tracker{% endblock %}
+
+{% block content %}
+<section class="panel form-panel">
+    <p class="eyebrow">NEW TASK</p>
+    <h1>Create a Task</h1>
+    <p class="muted">Write down what you need to accomplish.</p>
+
+    <form method="post" class="task-form">
+        {% csrf_token %}
+
+        <label for="title">Task title</label>
+        <input
+            id="title"
+            type="text"
+            name="title"
+            maxlength="200"
+            placeholder="e.g. Complete Django lab"
+            required
+        >
+
+        <button class="button" type="submit">Save Task</button>
+    </form>
+
+    <p>
+        <a href="{% url 'task_list' %}">← Back to all tasks</a>
+    </p>
+</section>
+{% endblock %}

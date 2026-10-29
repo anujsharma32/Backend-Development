@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 12A: Node.js and Express.js Server with Routing, Parameters, and EJS Templating | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exp12/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 12A: Node.js and Express.js Server with Routing, Parameters, and EJS Templating</h1>
+<h2>1. Aim</h2>
+<p>To construct a backend web server using Node.js and Express.js demonstrating route definition, URL path parameter extraction, query string processing, JSON and URL-encoded request body parsing, status code handling, and Server-Side Rendering (SSR) using the Embedded JavaScript (EJS) template engine.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To initialize a Node.js project and configure Express.js as the core application framework.</li>
+<li>To handle dynamic URL parameters via <code>req.params</code> (single and multi-segment path parameters).</li>
+<li>To extract and evaluate URL query strings using <code>req.query</code> for search pagination and mathematical operations.</li>
+<li>To configure built-in Express body-parsing middlewares (<code>express.json()</code> and <code>express.urlencoded()</code>) to handle incoming POST payloads.</li>
+<li>To simulate authentication and credential verification returning appropriate HTTP status codes (200 OK vs 401 Unauthorized).</li>
+<li>To integrate and render dynamic server-side views using the EJS templating engine (<code>views/users.ejs</code>, <code>views/profile.ejs</code>).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime</strong>: Node.js (v16.x or higher)</li>
+<li><strong>Framework</strong>: Express.js (<code>^4.18.2</code>)</li>
+<li><strong>Template Engine</strong>: EJS (<code>^3.1.9</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Postman or cURL for API testing, Web Browser</li>
+<li><strong>Package Manager</strong>: npm</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Express.js is a minimal, unopinionated web framework for Node.js that provides a robust suite of features for building web and mobile applications:</p>
+<ol>
+<li><strong>Routing and URL Parameters</strong>:
+   - <em>Route Path Parameters (<code>req.params</code>)</em>: Named URL segments used to capture values at specific positions in the URL (e.g., <code>/user/:id</code> captures <code>req.params.id</code>).
+   - <em>Query Parameters (<code>req.query</code>)</em>: Key-value pairs following the <code>?</code> character in the URL (e.g., <code>/search?q=nodejs&amp;page=2</code>), widely used for sorting, pagination, and optional filtering.</li>
+<li><strong>Body Parsing</strong>:
+   Incoming HTTP POST requests carry payload data in the message body. In modern Express, <code>express.json()</code> parses incoming payloads formatted as JSON, while <code>express.urlencoded({ extended: true })</code> parses UTF-8 encoded form bodies into <code>req.body</code>.</li>
+<li><strong>HTTP Status Codes</strong>:
+   RESTful communication communicates result states via HTTP status codes:
+   - <code>200 OK</code>: Successful retrieval or standard processing.
+   - <code>401 Unauthorized</code>: Authentication failed due to invalid credentials.</li>
+<li><strong>Server-Side Rendering (SSR) with EJS</strong>:
+   EJS (Embedded JavaScript) enables generating dynamic HTML markup with plain JavaScript. Data objects passed to <code>res.render()</code> are interpolated into template tags (<code>&lt;%= %&gt;</code> for escaped output, <code>&lt;% %&gt;</code> for control flow such as loops and conditionals).</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The project files reside in <code>Lab/Exp12/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/package.json">package.json</a></strong>: Declares project dependencies <code>express</code> and <code>ejs</code>.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/script.js">script.js</a></strong>: Standalone Node.js demonstration showing string interpolation and array aggregation using <code>reduce()</code>.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/app.js">app.js</a></strong>: Main server script listening on port 3000:
+  - <em>Route Parameters</em>:
+    - <code>GET /user/:id</code>: Returns JSON <code>{ message: "User details", userId }</code>.
+    - <code>GET /product/:category/:id</code>: Destructures category and id from <code>req.params</code>.
+  - <em>Query Processing</em>:
+    - <code>GET /search</code>: Returns query filters (<code>q</code>, <code>page</code>, <code>limit</code>).
+    - <code>GET /calculate</code>: Performs arithmetic (<code>add</code>, <code>subtract</code>, <code>multiply</code>, <code>divide</code>) on <code>num1</code> and <code>num2</code> with zero-division validation.
+  - <em>Body Parsing &amp; Auth Simulation</em>:
+    - <code>POST /register</code>: Returns confirmation JSON with parsed <code>username</code> and <code>email</code>.
+    - <code>POST /login</code>: Validates credentials (<code>test@example.com</code> / <code>password123</code>); returns status <code>200</code> with simulated token upon success or status <code>401</code> upon mismatch.
+  - <em>EJS Templating Routes</em>:
+    - <code>GET /users</code>: Renders <a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/views/users.ejs">users.ejs</a> looping through an array of user objects in a styled HTML table.
+    - <code>GET /profile/:id</code>: Renders <a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/views/profile.ejs">profile.ejs</a> passing user details into a profile card.
+    - <code>GET /home</code>: Calls <code>res.render('home', ...)</code>. <em>(Note: View file in folder is named <code>index.ejs</code>; calling <code>/home</code> requires either aliasing the template or accessing <code>index</code> directly).</em>
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/views/index.ejs">views/index.ejs</a></strong>: Contains markup displaying dynamic heading, message, and server timestamp.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/views/users.ejs">views/users.ejs</a></strong>: Iterates over user records with an <code>&lt;% users.forEach(...) %&gt;</code> table layout.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12/views/profile.ejs">views/profile.ejs</a></strong>: Structured user card displaying name, email, age, and city.</p>
+<h3>Core Routing Snippet:</h3>
+<pre><code class="language-javascript">// Arithmetic calculation via query parameters
+app.get('/calculate', (req, res) =&gt; {
+    const { num1, num2, operation } = req.query;
+    const n1 = parseFloat(num1);
+    const n2 = parseFloat(num2);
+    let result;
+
+    switch (operation) {
+        case 'add': result = n1 + n2; break;
+        case 'subtract': result = n1 - n2; break;
+        case 'multiply': result = n1 * n2; break;
+        case 'divide': result = n2 !== 0 ? n1 / n2 : 'Error: Division by zero'; break;
+        default: result = 'Invalid operation';
+    }
+    res.json({ num1: n1, num2: n2, operation, result });
+});
+</code></pre>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the experiment directory:
+   <code>bash
+   cd Lab/Exp12</code></li>
+<li>Install dependencies:
+   <code>bash
+   npm install</code></li>
+<li>Run the standalone JavaScript test script (optional):
+   <code>bash
+   node script.js</code></li>
+<li>Start the Express server:
+   <code>bash
+   node app.js</code></li>
+<li>Test endpoints using a browser or cURL:
+   - Root URL: <code>http://localhost:3000/</code>
+   - Path Params: <code>http://localhost:3000/user/101</code> and <code>http://localhost:3000/product/electronics/laptop-99</code>
+   - Query String: <code>http://localhost:3000/search?q=express&amp;page=1&amp;limit=5</code>
+   - Calculator: <code>http://localhost:3000/calculate?num1=20&amp;num2=5&amp;operation=multiply</code>
+   - EJS Views: <code>http://localhost:3000/users</code> and <code>http://localhost:3000/profile/42</code>
+   - POST Requests via cURL:
+     <code>bash
+     curl -X POST http://localhost:3000/login \
+          -H "Content-Type: application/json" \
+          -d '{"email":"test@example.com","password":"password123"}'</code></li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Root Endpoint (<code>/</code>)</strong>: Renders string response: <code>"Hello from Express!"</code>.</li>
+<li><strong>User Detail (<code>/user/101</code>)</strong>:
+  <code>json
+  { "message": "User details", "userId": "101" }</code></li>
+<li><strong>Calculation Endpoint (<code>/calculate?num1=20&amp;num2=5&amp;operation=multiply</code>)</strong>:
+  <code>json
+  { "num1": 20, "num2": 5, "operation": "multiply", "result": 100 }</code></li>
+<li><strong>Login Endpoint (<code>POST /login</code>)</strong>:</li>
+<li>Success: Returns HTTP 200 with <code>{ "success": true, "message": "Login successful", "token": "sample-jwt-token" }</code>.</li>
+<li>Failure: Returns HTTP 401 with <code>{ "success": false, "message": "Invalid credentials" }</code>.</li>
+<li><strong>EJS Users Table (<code>/users</code>)</strong>: Renders HTML table listing John Doe, Jane Smith, and Bob Johnson.</li>
+<li><strong>EJS Profile Card (<code>/profile/1</code>)</strong>: Renders user profile card displaying name, email, age (25), and city (New York).</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Acquired hands-on experience setting up an Express.js server from scratch.</li>
+<li>Learned the distinction and application of path parameters versus query string arguments.</li>
+<li>Understood how middleware functions process request payloads before route execution.</li>
+<li>Gained practical knowledge of server-side template rendering using EJS and passing dynamic data contexts.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Experiment 12A illustrates fundamental server-side architecture in Node.js and Express.js. It verifies that Express handles diverse request inputs (paths, queries, bodies) and supports multiple response formats (plain text, JSON APIs, and server-rendered HTML).</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: How do <code>req.params</code> and <code>req.query</code> differ in Express.js?</strong><br />
+<strong>Ans:</strong> <code>req.params</code> contains route parameters defined in the route path pattern (e.g., <code>/user/:id</code>), whereas <code>req.query</code> contains optional key-value query string parameters appended after the <code>?</code> delimiter in the URL.</p>
+<p><strong>Q2: What is the purpose of <code>express.json()</code> and <code>express.urlencoded()</code> middlewares?</strong><br />
+<strong>Ans:</strong> They parse incoming HTTP request bodies. <code>express.json()</code> parses JSON payloads into JavaScript objects on <code>req.body</code>, while <code>express.urlencoded()</code> parses standard HTML form URL-encoded submissions.</p>
+<p><strong>Q3: What is the difference between <code>&lt;%= %&gt;</code> and <code>&lt;%- %&gt;</code> in EJS?</strong><br />
+<strong>Ans:</strong> <code>&lt;%= %&gt;</code> outputs HTML-escaped values to protect against Cross-Site Scripting (XSS), whereas <code>&lt;%- %&gt;</code> renders raw unescaped HTML directly to the output.</p>
+<p><strong>Q4: How does <code>app.set('view engine', 'ejs')</code> assist the rendering process?</strong><br />
+<strong>Ans:</strong> It informs Express to automatically use the EJS template engine when <code>res.render()</code> is invoked, allowing omission of file extensions when referencing template views.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

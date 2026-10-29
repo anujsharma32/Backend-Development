@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 15: Django To-Do List Web Application with MTV Architecture and SQLite | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+            margin: 20px 0;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exp15/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 15: Django To-Do List Web Application with MTV Architecture and SQLite</h1>
+<h2>1. Aim</h2>
+<p>To develop a database-driven server-side web application using the Python Django framework, implementing the Model-Template-View (MTV) architectural pattern, SQLite persistence, Django Template Inheritance, and full CRUD operations with status toggling.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To configure and organize a multi-tier Django project (<code>todo_project</code>) with an encapsulated modular application (<code>todo</code>).</li>
+<li>To define a persistent database model (<code>Task</code>) with <code>CharField</code>, <code>BooleanField</code>, and auto-timestamped <code>DateTimeField</code>.</li>
+<li>To generate and execute database migrations creating tables in SQLite (<code>0001_initial.py</code>).</li>
+<li>To implement URL routing and dispatching across project and application levels.</li>
+<li>To write Django view controller functions handling task listing, filtering, task addition, state toggling, and deletion.</li>
+<li>To apply Django Template Inheritance using a base layout (<code>base.html</code>), partials (<code>header.html</code>, <code>footer.html</code>), and child templates (<code>task_list.html</code>, <code>add_task.html</code>).</li>
+<li>To secure HTML forms against Cross-Site Request Forgery (CSRF) using Django's built-in <code>{% csrf_token %}</code> tag.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language / Runtime</strong>: Python 3.10+</li>
+<li><strong>Framework</strong>: Django 4.x / 5.x</li>
+<li><strong>Database</strong>: SQLite3</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory &amp; Architecture</h2>
+<p>Django is a high-level, batteries-included Python web framework designed to encourage rapid development and clean, pragmatic design. It adheres to the <strong>Model-Template-View (MTV)</strong> pattern:</p>
+<ol>
+<li><strong>Model (M)</strong>:
+   The single, definitive source of truth about your data. It contains the essential fields and behaviors of the data being stored. Django's Object-Relational Mapper (ORM) maps Python classes to database tables.</li>
+<li><strong>Template (T)</strong>:
+   The presentation layer. Django's Template Language (DTL) separates business logic from HTML design, supporting template inheritance via <code>{% extends %}</code>, <code>{% block %}</code>, and <code>{% include %}</code> directives.</li>
+<li><strong>View (V)</strong>:
+   The business logic layer. A view is a Python callable (function or class) that takes an HTTP request and returns an HTTP response (such as an HTML document or a redirect).</li>
+<li><strong>URLconf (URL Configuration)</strong>:
+   Maps URL patterns to Python view functions.</li>
+<li><strong>CSRF Protection</strong>:
+   Protects applications against Cross-Site Request Forgery by issuing a cryptographically signed user-specific token in forms.</li>
+</ol>
+<h2>5. Implementation Details</h2>
+<h3>Project Structure</h3>
+<pre><code>Lab/Exp15/
+├── manage.py
+├── db.sqlite3
+├── todo_project/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   ├── asgi.py
+│   └── wsgi.py
+└── todo/
+    ├── __init__.py
+    ├── admin.py
+    ├── apps.py
+    ├── models.py
+    ├── urls.py
+    ├── views.py
+    ├── tests.py
+    ├── migrations/
+    │   ├── __init__.py
+    │   └── 0001_initial.py
+    └── templates/
+        └── todo/
+            ├── base.html
+            ├── header.html
+            ├── footer.html
+            ├── task_list.html
+            └── add_task.html
+</code></pre>
+<h3>1. Data Model (<code>todo/models.py</code>)</h3>
+<pre><code class="language-python">from django.db import models
+
+class Task(models.Model):
+    title = models.CharField(max_length=200)
+    completed = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.title
+</code></pre>
+<h3>2. View Functions (<code>todo/views.py</code>)</h3>
+<pre><code class="language-python">from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
+from .models import Task
+
+def task_list(request):
+    tasks = Task.objects.all().order_by(&quot;-created_at&quot;)
+    completed_count = tasks.filter(completed=True).count()
+    pending_count = tasks.filter(completed=False).count()
+
+    return render(request, &quot;todo/task_list.html&quot;, {
+        &quot;tasks&quot;: tasks,
+        &quot;completed_count&quot;: completed_count,
+        &quot;pending_count&quot;: pending_count,
+    })
+
+def add_task(request):
+    if request.method == &quot;POST&quot;:
+        title = request.POST.get(&quot;title&quot;, &quot;&quot;).strip()
+        if title:
+            Task.objects.create(title=title)
+        return redirect(&quot;task_list&quot;)
+    return render(request, &quot;todo/add_task.html&quot;)
+
+@require_POST
+def toggle_task(request, task_id):
+    task = get_object_or_404(Task, pk=task_id)
+    task.completed = not task.completed
+    task.save(update_fields=[&quot;completed&quot;])
+    return redirect(&quot;task_list&quot;)
+
+@require_POST
+def delete_task(request, task_id):
+    task = get_object_or_404(Task, pk=task_id)
+    task.delete()
+    return redirect(&quot;task_list&quot;)
+</code></pre>
+<h3>3. URL Dispatcher (<code>todo/urls.py</code>)</h3>
+<pre><code class="language-python">from django.urls import path
+from . import views
+
+urlpatterns = [
+    path(&quot;&quot;, views.task_list, name=&quot;task_list&quot;),
+    path(&quot;add/&quot;, views.add_task, name=&quot;add_task&quot;),
+    path(&quot;toggle/&lt;int:task_id&gt;/&quot;, views.toggle_task, name=&quot;toggle_task&quot;),
+    path(&quot;delete/&lt;int:task_id&gt;/&quot;, views.delete_task, name=&quot;delete_task&quot;),
+]
+</code></pre>
+<h3>4. Template Inheritance Layout</h3>
+<ul>
+<li><strong><code>base.html</code></strong>: Sets up global HTML5 document structure, meta tags, and loads reusable <code>header.html</code> and <code>footer.html</code>.</li>
+<li><strong><code>task_list.html</code></strong>: Extends <code>base.html</code>, displays summary statistics (total, completed, pending), iterates through tasks with status tags, and provides action buttons with CSRF tokens.</li>
+<li><strong><code>add_task.html</code></strong>: Extends <code>base.html</code>, provides an accessible form with POST method and CSRF protection to submit new tasks.</li>
+</ul>
+<h2>6. How to Run the Project</h2>
+<ol>
+<li>Open terminal and navigate to the project directory:
+   <code>bash
+   cd Lab/Exp15</code></li>
+<li>Activate Python environment and run migrations:
+   <code>bash
+   python3 manage.py migrate</code></li>
+<li>Start the Django development server:
+   <code>bash
+   python3 manage.py runserver 8000</code></li>
+<li>Open web browser and visit:
+   <code>http://127.0.0.1:8000/</code></li>
+</ol>
+<h2>7. Observations &amp; Results</h2>
+<ol>
+<li>The application successfully connects to the local SQLite database via Django ORM.</li>
+<li>New tasks submitted via <code>POST /add/</code> are validated, trimmed, and inserted with automatic timestamps.</li>
+<li>State toggling (<code>POST /toggle/&lt;id&gt;/</code>) seamlessly swaps <code>completed</code> between <code>True</code> and <code>False</code> with partial field saving (<code>update_fields=['completed']</code>).</li>
+<li>Task deletion removes the record from the database table and immediately refreshes the task list.</li>
+<li>Computed metrics dynamically update counts for total, completed, and pending items.</li>
+<li>CSRF middleware ensures security against unauthorized cross-site submissions.</li>
+</ol>
+<h2>8. Conclusion</h2>
+<p>The Django MTV architecture provides an exceptionally organized, scalable foundation for database-driven web development. By combining Django Models, QuerySet filtering, URL routing, and Template Inheritance, a complete, robust To-Do tracking system was implemented successfully.</p>
+
+            <div class="report-footer">
+                <p>Experiment Report • Backend Development • Academic Year 2024–2025</p>
+                <a href="../../index.html" class="btn">
+                    Back to Overview
+                </a>
+            </div>
+        </article>
+    </main>
+
+</body>
+</html>

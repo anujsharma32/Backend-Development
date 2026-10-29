@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 05: JavaScript Fundamentals — Arrays, Objects, Functions, and Library Management | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exp5/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 05: JavaScript Fundamentals — Arrays, Objects, Functions, and Library Management</h1>
+<h2>1. Aim</h2>
+<p>To understand and implement core JavaScript programming concepts including data structures (arrays and objects), function declarations, built-in string/array methods, and to develop a modular mini-application for managing a book library.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To learn fundamental array manipulation techniques (instantiation, insertion using <code>push()</code>, index-based access, and modification).</li>
+<li>To define and manipulate JavaScript object literals, accessing and modifying properties dynamically.</li>
+<li>To implement function declarations and understand argument passing and template literal return values.</li>
+<li>To practice built-in string manipulation methods (<code>toUpperCase()</code>, <code>toLowerCase()</code>, <code>split()</code>).</li>
+<li>To develop a practical Project-Based Learning (PBL) activity: a console-based Library Management System using array higher-order search methods (<code>Array.prototype.find</code>).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language</strong>: JavaScript (ECMAScript 2015 / ES6)</li>
+<li><strong>Editor / IDE</strong>: Visual Studio Code</li>
+<li><strong>Runtime Environment</strong>: Modern Web Browser (Google Chrome DevTools Console) or Node.js runtime</li>
+<li><strong>Markup</strong>: HTML5 for console script mounting</li>
+</ul>
+<h2>4. Theory</h2>
+<p>JavaScript is a high-level, dynamic, interpreted language that serves as the foundation for both client-side and server-side web development.</p>
+<ol>
+<li>
+<p><strong>Arrays</strong>:
+   An array is an ordered, zero-indexed list of values. In JavaScript, arrays are dynamically sized and can hold heterogeneous data types. Common operations include:
+   - <code>push(element)</code>: Appends an element to the end of the array.
+   - Index lookup (<code>arr[i]</code>) and mutation (<code>arr[i] = newValue</code>).
+   - Higher-order methods such as <code>find(predicate)</code>, which returns the first element satisfying the predicate condition.</p>
+</li>
+<li>
+<p><strong>Objects</strong>:
+   Objects are collections of key-value pairs where keys are strings (or Symbols) and values can be any type. Objects allow modeling real-world entities. Properties can be accessed and mutated using dot notation (<code>obj.prop</code>) or bracket notation (<code>obj['prop']</code>).</p>
+</li>
+<li>
+<p><strong>Functions</strong>:
+   Functions are first-class citizens in JavaScript; they can be assigned to variables, passed as arguments, and returned from other functions. Functions encapsulate reusable logic and facilitate modular program design.</p>
+</li>
+<li>
+<p><strong>String Methods</strong>:
+   Strings are immutable sequences of characters. Methods like <code>toUpperCase()</code> and <code>toLowerCase()</code> return new transformed strings, while <code>split(delimiter)</code> divides a string into an ordered list of substrings and returns them in an array.</p>
+</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment is organized across four key files:</p>
+<ul>
+<li><strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp5/index.html">index.html</a></strong>:
+  Basic HTML host structure loading the JavaScript scripts into the browser document context.</li>
+<li><strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp5/script.js">script.js</a></strong>:
+  Demonstrates basic array creation, object definition, and function declaration:
+  ```javascript
+  // Arrays
+  const fruits = ['Apple', 'Banana', 'Mango'];
+  fruits.push('Orange');</li>
+</ul>
+<p>// Objects
+  const student = {
+      name: 'John Doe',
+      age: 20,
+      course: 'Backend Development'
+  };</p>
+<p>// Functions
+  function greet(name) {
+      return <code>Hello, ${name}! Welcome to Backend Development Lab.</code>;
+  }
+  <code>- **[script2.js](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp5/script2.js)**:
+  Implements string transformations, array mutations, and dynamic object property addition and modification:</code>javascript
+  // String operations
+  const str = "Backend Development";
+  console.log("Upper Case:", str.toUpperCase());
+  console.log("Lower Case:", str.toLowerCase());
+  console.log("Split by space:", str.split(" "));</p>
+<p>// Object property mutation
+  let user = { name: "John", role: "Dev" };
+  user.age = 25;
+  user.role = "Senior Dev";
+  <code>``
+- **[library.js](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp5/library.js)**:
+  Implements the Library Management System:
+  -</code>addBook(title, author)<code>: Instantiates a book object</code>{ title, author }<code>and appends it to the global</code>library<code>array.
+  -</code>findBook(title)<code>: Uses</code>library.find()` to locate a book by title, outputting the book details if found or a descriptive not-found message otherwise.</p>
+<h2>6. Procedure</h2>
+<ol>
+<li>Open the project directory in a terminal:
+   <code>bash
+   cd Lab/Exp5</code></li>
+<li><strong>Method 1 — In-Browser Execution</strong>:
+   - Open <a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp5/index.html">index.html</a> in Google Chrome or any modern browser.
+   - Open Developer Tools (<code>F12</code> or <code>Cmd+Option+I</code> on macOS / <code>Ctrl+Shift+I</code> on Windows/Linux).
+   - Navigate to the <strong>Console</strong> tab to view logged outputs.
+   - To execute <code>script2.js</code> or <code>library.js</code> in the browser, change the <code>&lt;script src="script.js"&gt;</code> tag in <code>index.html</code> or load them directly in the console.</li>
+<li><strong>Method 2 — Node.js CLI Execution</strong>:
+   - Run the script files directly via Node.js:
+     <code>bash
+     node script.js
+     node script2.js
+     node library.js</code></li>
+</ol>
+<h2>7. Output and Results</h2>
+<p>Based on code execution and verified against repository screenshot artifacts:</p>
+<ul>
+<li><strong>Array Demonstration (<code>arrays.png</code>, <code>console.png</code>)</strong>:</li>
+<li>Initial array: <code>['Apple', 'Banana', 'Mango']</code></li>
+<li>Array after <code>push('Orange')</code>: <code>['Apple', 'Banana', 'Mango', 'Orange']</code></li>
+<li><strong>Object Demonstration (<code>objects.png</code>)</strong>:</li>
+<li>Student object logged with properties <code>name: 'John Doe'</code>, <code>age: 20</code>, <code>course: 'Backend Development'</code>.</li>
+<li>Student Name logged: <code>'John Doe'</code>.</li>
+<li><strong>Function Output (<code>functions.png</code>)</strong>:</li>
+<li>Function call output: <code>"Hello, Student! Welcome to Backend Development Lab."</code></li>
+<li><strong>Methods Demonstration (<code>methods.png</code>)</strong>:</li>
+<li>String upper/lower case conversions and array split output <code>['Backend', 'Development']</code>.</li>
+<li>Array and object update outputs verifying in-place mutation.</li>
+<li><strong>PBL Library Management Activity (<code>PBL Activity.png</code>)</strong>:</li>
+<li>Successfully adds <em>"The Alchemist"</em>, <em>"Wings of Fire"</em>, and <em>"Harry Potter"</em>.</li>
+<li>Querying <code>"Wings of Fire"</code> returns the matching book object <code>{ title: 'Wings of Fire', author: 'A.P.J. Abdul Kalam' }</code>.</li>
+<li>Querying <code>"Unknown Book"</code> correctly logs <code>Book "Unknown Book" not found.</code></li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Acquired solid foundation in JavaScript syntax, primitive types, and reference data types (Arrays, Objects).</li>
+<li>Mastered function definition syntax, parameter handling, and return statements.</li>
+<li>Learned built-in methods for strings and arrays.</li>
+<li>Implemented real-world lookup and storage logic using object collections and higher-order methods (<code>find</code>).</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Experiment 05 demonstrates the fundamental data structures, functions, and standard object/array methods of JavaScript. The successful execution of the Library Management script validates the practical application of array searches and object modeling in web development.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the difference between primitive data types and reference types in JavaScript?</strong><br />
+<strong>Ans:</strong> Primitives (Number, String, Boolean, null, undefined, Symbol, BigInt) are stored by value in the call stack. Reference types (Objects, Arrays, Functions) are stored in the memory heap and accessed via memory references.</p>
+<p><strong>Q2: How does <code>Array.prototype.find()</code> work compared to <code>Array.prototype.filter()</code>?</strong><br />
+<strong>Ans:</strong> <code>find()</code> returns the first single element that matches the callback predicate (or <code>undefined</code> if none match), whereas <code>filter()</code> returns a new array containing all elements that satisfy the condition.</p>
+<p><strong>Q3: How do template literals differ from traditional string concatenation in JavaScript?</strong><br />
+<strong>Ans:</strong> Template literals use backticks (<code>`</code>) and <code>${expression}</code> syntax to allow string interpolation and multi-line strings without explicit escape characters or plus (<code>+</code>) operators.</p>
+<p><strong>Q4: Can properties be added dynamically to a JavaScript object declared with <code>const</code>?</strong><br />
+<strong>Ans:</strong> Yes. <code>const</code> prevents the variable identifier from being reassigned to a new reference, but the underlying object itself remains mutable, allowing keys to be added, modified, or removed.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Practical Assignment 01: Client-Side Interactive Notes Application with LocalStorage | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Assignment-1/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Practical Assignment 01: Client-Side Interactive Notes Application with LocalStorage</h1>
+<h2>1. Aim</h2>
+<p>To design, implement, and document a feature-rich, responsive client-side Notes Application using semantic HTML5, modern CSS3 variables for theme toggling, and vanilla JavaScript (ES6+) utilizing the Web Storage API (<code>localStorage</code>), JSON serialization, and Blob file handling for data import/export.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To design a clean, responsive user interface using semantic HTML5 and CSS3 (Flexbox, CSS custom properties / variables).</li>
+<li>To implement client-side data persistence using the Web Storage API (<code>localStorage</code>) with JSON parsing and error handling.</li>
+<li>To execute full client-side CRUD (Create, Read, Update, Delete) operations on note items.</li>
+<li>To categorize notes (e.g., General, College, Work, Personal, Important) and implement multi-criteria filtering (by status and category).</li>
+<li>To build a real-time search engine filtering notes dynamically as the user types.</li>
+<li>To implement data portability features: exporting notes as a JSON file and importing external JSON backup files via <code>FileReader</code>.</li>
+<li>To implement persistent theme toggling (Light / Dark mode) saved to browser storage.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Markup / Styling</strong>: HTML5, CSS3 (Modern Flexbox, CSS Grid, Custom Properties)</li>
+<li><strong>Programming Language</strong>: Vanilla JavaScript (ECMAScript 2015 / ES6+)</li>
+<li><strong>APIs</strong>: Web Storage API (<code>localStorage</code>), File and Blob API, <code>FileReader</code></li>
+<li><strong>Editor</strong>: Visual Studio Code</li>
+<li><strong>Runtime</strong>: Any modern web browser (Google Chrome, Firefox, Safari, Edge)</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Client-side web applications frequently require data persistence and dynamic filtering without requiring immediate network latency or database overhead:</p>
+<ol>
+<li><strong>Web Storage API (<code>localStorage</code>)</strong>:
+   - <code>localStorage</code> provides persistent key-value storage in the user's browser across sessions and page reloads.
+   - Storage is limited to ~5MB per origin and only accepts string data. Complex JavaScript objects or arrays must be serialized to strings using <code>JSON.stringify()</code> prior to storage and deserialized using <code>JSON.parse()</code> upon retrieval.</li>
+<li><strong>State Management &amp; Dynamic Rendering</strong>:
+   - The application maintains application state in memory. Whenever the state changes (adding, editing, toggling, or deleting a note), the state is persisted to <code>localStorage</code> and a central render function (<code>renderNotes()</code>) synchronizes the DOM.</li>
+<li><strong>File Export and Import via Blob &amp; FileReader</strong>:
+   - <em>Exporting</em>: In-memory data is converted to a JSON string, wrapped into a <code>Blob</code> (Binary Large Object) with MIME type <code>application/json</code>, and downloaded by creating a programmatic anchor element (<code>&lt;a download="..."&gt;</code>).
+   - <em>Importing</em>: The <code>FileReader</code> API asynchronously reads uploaded <code>.json</code> files, parses their contents, validates their structure, and merges or overwrites the application state.</li>
+<li><strong>Theming with CSS Variables</strong>:
+   Defining colors as CSS Custom Properties (e.g., <code>--bg</code>, <code>--card</code>, <code>--text</code>) on <code>:root</code> and toggling a <code>.dark</code> class on the <code>&lt;body&gt;</code> enables instant theme switching with smooth CSS transitions.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The application resides in <code>Theory/Assignment-1/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Assignment-1/index.html">index.html</a></strong>:
+  Defines semantic containers for header (with theme toggle), note creation bar (input field, category select, add button), tools bar (search input, status filter dropdown, export and import buttons), note counter badge, and the main notes grid container.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Assignment-1/style.css">style.css</a></strong>:
+  Implements responsive design tokens using CSS variables, button hover animations, card shadows, completed-task strike-throughs, and dark mode palette definitions.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Assignment-1/script.js">script.js</a></strong>:
+  Encapsulates complete application logic:
+  - <strong>Storage Helpers</strong>: <code>getNotes()</code> and <code>saveNotes()</code> with <code>try/catch</code> JSON validation.
+  - <strong>CRUD Operations</strong>:
+    - <code>addNote()</code>: Validates input, builds note entity <code>{ id: Date.now(), text, completed: false, category, createdAt }</code>, persists, and re-renders.
+    - <code>deleteNote(id)</code>: Filters out note by unique timestamp ID.
+    - <code>editNote(id)</code>: Prompts user for updated text, updates timestamp, and saves.
+    - <code>toggleComplete(id)</code>: Inverts boolean completion flag.
+  - <strong>Filtering &amp; Search</strong>:
+    - <code>renderNotes()</code>: Applies both text search queries (<code>text.toLowerCase().includes(...)</code>) and completion filter states (<code>all</code>, <code>active</code>, <code>completed</code>).
+  - <strong>Import &amp; Export</strong>:
+    - <code>exportBtn</code>: Generates a downloadable <code>notes.json</code> via <code>URL.createObjectURL(new Blob(...))</code>.
+    - <code>importInput</code>: Uses <code>FileReader.readAsText()</code> to parse and load external notes into storage.
+  - <strong>Theme Toggle</strong>:
+    - Reads saved preference from <code>localStorage.getItem("theme")</code> and applies <code>.dark</code> class to <code>document.body</code>.</p>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the assignment folder:
+   <code>bash
+   cd Theory/Assignment-1</code></li>
+<li>Open <a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Assignment-1/index.html">index.html</a> in your browser:
+   - On macOS: <code>open index.html</code>
+   - On Windows: <code>start index.html</code>
+   - On Linux: <code>xdg-open index.html</code></li>
+<li><strong>Creating Notes</strong>:
+   - Type note text, choose a category from the dropdown (e.g., "College" or "Work"), and click <strong>Add Note</strong>.</li>
+<li><strong>Managing Notes</strong>:
+   - Click the checkmark/task body to toggle completed status.
+   - Click the Edit button to update note contents.
+   - Click Delete to remove the note.</li>
+<li><strong>Testing Persistence</strong>:
+   - Refresh the browser (<code>F5</code> or <code>Cmd+R</code>) and confirm that all notes remain present.</li>
+<li><strong>Export &amp; Import</strong>:
+   - Click <strong>Export</strong> to download <code>notes.json</code>.
+   - Clear notes or switch to a new browser session, click <strong>Import</strong>, select <code>notes.json</code>, and verify all notes are restored.</li>
+<li><strong>Theme Toggle</strong>:
+   - Click the moon/sun button (<code>#themeBtn</code>) to toggle between light and dark themes.</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Initial View</strong>: Displays header "Notes - Your notes, saved locally", theme button, input bar, filter tools, and empty state: <em>"No notes yet. Add your first note above."</em></li>
+<li><strong>Note Addition</strong>: Dynamically mounts card showing text, category badge (with category-specific accent color), timestamp, and action buttons (Edit, Delete).</li>
+<li><strong>Search &amp; Filtering</strong>: Typing in the search bar instantly filters visible cards in real time without page reload.</li>
+<li><strong>Data Persistence</strong>: Data verified in browser DevTools under <strong>Application &gt; Storage &gt; Local Storage &gt; notes</strong>.</li>
+<li><strong>JSON File Export</strong>: Successfully downloads formatted JSON payload containing all note objects.</li>
+<li><strong>Theme Toggling</strong>: Body background and text smoothly transition between dark and light themes, remembering the chosen theme across page refreshes.</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Developed comprehensive understanding of client-side web application architecture.</li>
+<li>Mastered browser storage mechanisms using the HTML5 <code>localStorage</code> API.</li>
+<li>Implemented real-time dynamic search and multi-criteria array filtering.</li>
+<li>Handled browser file input/output streams using <code>Blob</code>, <code>URL.createObjectURL</code>, and <code>FileReader</code>.</li>
+<li>Implemented accessible, persistent dark mode theming using modern CSS variables.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Practical Assignment 01 demonstrates the full capabilities of modern Vanilla JavaScript in creating high-performance, responsive, and persistent single-page web applications without relying on external frontend frameworks.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the storage limit of <code>localStorage</code> and how does it compare to cookies?</strong><br />
+<strong>Ans:</strong> <code>localStorage</code> provides approximately 5MB of storage per origin and stores data exclusively on the client without sending it in HTTP headers. In contrast, cookies are limited to 4KB and are automatically transmitted to the server with every HTTP request.</p>
+<p><strong>Q2: What happens if <code>JSON.parse()</code> receives an invalid or corrupted string from <code>localStorage</code>?</strong><br />
+<strong>Ans:</strong> <code>JSON.parse()</code> throws a <code>SyntaxError</code> exception that can crash the script. It is standard best practice to wrap <code>JSON.parse()</code> in a <code>try...catch</code> block to handle corrupted data gracefully.</p>
+<p><strong>Q3: How does the <code>Blob</code> object facilitate client-side file downloads?</strong><br />
+<strong>Ans:</strong> A <code>Blob</code> represents raw immutable data. When combined with <code>URL.createObjectURL(blob)</code>, the browser creates a temporary unique DOMString URL pointing to the data in memory, which can be linked to a download anchor.</p>
+<p><strong>Q4: How do CSS Custom Properties (variables) enable seamless theme toggling?</strong><br />
+<strong>Ans:</strong> By defining color properties as variables (e.g., <code>--bg: #ffffff;</code>) and overriding their values under a <code>.dark</code> class (e.g., <code>--bg: #1a1a1a;</code>), simply toggling <code>.dark</code> on the <code>&lt;body&gt;</code> element updates the entire page's styling without changing individual element rules.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

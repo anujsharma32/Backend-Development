@@ -1,0 +1,86 @@
+
+{% extends 'todo/base.html' %}
+
+{% block title %}My Tasks | Task Tracker{% endblock %}
+
+{% block content %}
+<section class="panel">
+    <div class="page-heading">
+        <div>
+            <p class="eyebrow">STAY ORGANIZED</p>
+            <h1>My To-Do List</h1>
+            <p class="muted">Plan your work. Complete your goals.</p>
+        </div>
+
+        <a class="button" href="{% url 'add_task' %}">
+            + Add Task
+        </a>
+    </div>
+
+    <div class="stats">
+    <div class="stat-card">
+        <span>Total Tasks</span>
+        <strong>{{ tasks|length }}</strong>
+    </div>
+    <div class="stat-card">
+        <span>Completed</span>
+        <strong>{{ completed_count }}</strong>
+    </div>
+    <div class="stat-card">
+        <span>Pending</span>
+        <strong>{{ pending_count }}</strong>
+    </div>
+</div>
+    <h2>Your Tasks</h2>
+
+    <ul class="task-list">
+        {% for task in tasks %}
+        <li class="task-item">
+            <div class="task-info">
+                <span class="task-title {% if task.completed %}completed{% endif %}">
+                    {{ task.title }}
+                </span>
+                <small>
+                    {% if task.completed %}
+                        Completed
+                    {% else %}
+                        Pending
+                    {% endif %}
+                </small>
+            </div>
+
+            <div class="task-actions">
+                <form method="post"
+                      action="{% url 'toggle_task' task.id %}">
+                    {% csrf_token %}
+                    <button class="button secondary" type="submit">
+                        {% if task.completed %}
+                            Undo
+                        {% else %}
+                            Complete
+                        {% endif %}
+                    </button>
+                </form>
+
+                <form method="post"
+                      action="{% url 'delete_task' task.id %}"
+                      class="delete-form">
+                    {% csrf_token %}
+                    <button class="button danger" type="submit">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </li>
+        {% empty %}
+        <li class="empty-state">
+            <h3>No tasks yet</h3>
+            <p>Add your first task to get started.</p>
+            <a class="button" href="{% url 'add_task' %}">
+                Create a Task
+            </a>
+        </li>
+        {% endfor %}
+    </ul>
+</section>
+{% endblock %}

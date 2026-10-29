@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 07: ES6 Features and DOM Manipulation | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .brand span {
+            color: var(--accent);
+        }
+
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .report-card ul,
+        .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+
+        .report-card li {
+            margin-bottom: 6px;
+        }
+
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        .report-card th,
+        .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+
+        .report-card p code,
+        .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+
+            .top-nav,
+            .breadcrumbs,
+            .report-footer .btn {
+                display: none !important;
+            }
+
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exp07/report.md"
+                    target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 07: ES6 Features and DOM Manipulation</h1>
+            <h2>1. Aim</h2>
+            <p>To understand modern JavaScript (ES6+) features and demonstrate how to select, manipulate, and style HTML
+                Document Object Model (DOM) elements dynamically in response to user events.</p>
+            <h2>2. Objectives</h2>
+            <ul>
+                <li>To understand ES6 features and learn how to select and modify HTML elements using JavaScript DOM
+                    methods.</li>
+                <li>To practice variable declaration with block scoping using <code>const</code> and <code>let</code>.
+                </li>
+                <li>To implement ES6 arrow functions (<code>=&gt;</code>) and template literals
+                    (<code>`Hello, ${name}!`</code>).</li>
+                <li>To utilize DOM selection methods such as <code>document.getElementById()</code>.</li>
+                <li>To attach asynchronous click event listeners (<code>addEventListener</code>) and dynamically update
+                    text content and inline styles.</li>
+            </ul>
+            <h2>3. Requirements</h2>
+            <ul>
+                <li><strong>Software / Tools</strong>: Visual Studio Code, Google Chrome (or any modern web browser)
+                </li>
+                <li><strong>Languages / Technologies</strong>: HTML5, CSS3, JavaScript (ECMAScript 2015 / ES6)</li>
+                <li><strong>Dependencies</strong>: None (native browser APIs)</li>
+            </ul>
+            <h2>4. Theory</h2>
+            <p>ES6 (ECMAScript 2015) introduced key modern language features such as <code>let</code>,
+                <code>const</code>, arrow functions, template literals, and enhanced object syntax:
+                - <strong><code>const</code> and <code>let</code></strong>: Provide block-level scoping, preventing
+                common hoisting pitfalls associated with legacy <code>var</code>.
+                - <strong>Arrow Functions</strong>: Provide a concise syntax for function expressions and lexically bind
+                the <code>this</code> value.
+                - <strong>Template Literals</strong>: Enable embedded expressions and multi-line strings using
+                backticks.
+            </p>
+            <p>The <strong>Document Object Model (DOM)</strong> represents an HTML document as a hierarchical tree of
+                objects. Each HTML tag, attribute, and text node is represented as an object in memory:
+                - JavaScript accesses these nodes via methods such as <code>document.getElementById()</code>.
+                - Content can be dynamically modified through properties like <code>textContent</code> or
+                <code>innerHTML</code>.
+                - Presentation can be altered programmatically through the element's <code>style</code> object (e.g.,
+                <code>element.style.color = "blue"</code>).
+                - User interactivity is established using event-driven programming with <code>addEventListener()</code>.
+            </p>
+            <h2>5. Implementation</h2>
+            <p>The experiment consists of:
+                - <strong><a
+                        href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp07/index.html">index.html</a></strong>:
+                Defines an interactive container with heading <code>&lt;h1 id="heading"&gt;</code>, message paragraph
+                <code>&lt;p id="message"&gt;</code>, and action button <code>&lt;button id="changeBtn"&gt;</code>.
+                - <strong><a
+                        href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp07/app.js">app.js</a></strong>:
+                Implements the ES6 features and DOM manipulation:
+                ```javascript
+                const heading = document.getElementById("heading");
+                const message = document.getElementById("message");
+                const button = document.getElementById("changeBtn");
+            </p>
+            <p>const student = {
+                name: "Anuj",
+                course: "B.Tech CSE"
+                };</p>
+            <p>// Arrow function and template literal
+                const greet = (name) =&gt; <code>Hello, ${name}!</code>;</p>
+            <p>console.log(greet(student.name));
+                console.log(<code>Course: ${student.course}</code>);</p>
+            <p>// DOM manipulation and event handling
+                button.addEventListener("click", () =&gt; {
+                heading.textContent = "DOM Manipulation Working!";
+                message.textContent = <code>Welcome, ${student.name}.</code>;
+                message.style.color = "blue";
+                });
+                ```</p>
+            <h2>6. Procedure</h2>
+            <ol>
+                <li>Navigate to the experiment directory:
+                    <code>bash
+   cd Lab/Exp07</code>
+                </li>
+                <li>Open <a
+                        href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp07/index.html">index.html</a>
+                    in a web browser:
+                    - On macOS: <code>open index.html</code>
+                    - On Windows: <code>start index.html</code>
+                    - On Linux: <code>xdg-open index.html</code></li>
+                <li>Open the browser Developer Tools console (<code>Cmd+Option+I</code> on macOS or <code>F12</code> on
+                    Windows/Linux) to observe console logs generated on initial load.</li>
+                <li>Click the <strong>Change Content</strong> button to trigger the event listener.</li>
+                <li>Verify that the heading text, paragraph message, and text color change instantly.</li>
+            </ol>
+            <h2>7. Output and Results</h2>
+            <p>Based on testing and repository screenshot records:
+                - <strong>Initial State (<code>Screenshots/initial_webpage.png</code>)</strong>:
+                - Heading: "Experiment 07: ES6 and DOM"
+                - Paragraph: "This is the original message."
+                - Button: "Change Content"
+                - <strong>Console Log Output (<code>Screenshots/ES6_console.png</code>)</strong>:
+                - <code>Hello, Anuj!</code>
+                - <code>Course: B.Tech CSE</code>
+                - <strong>Post-Click State (<code>Screenshots/DOM_manipluation.png</code>)</strong>:
+                - Heading updates to: "DOM Manipulation Working!"
+                - Paragraph updates to: "Welcome, Anuj." with text color modified to blue (<code>#0000FF</code>).
+                - <strong>Result Summary</strong>:
+                ES6 features and DOM manipulation were implemented and tested successfully.
+                - <strong>Live Output</strong>: Accessible via GitHub Pages at
+                <code>https://anujsharma32.github.io/Backend-Development/Lab/Exp07/</code>.
+            </p>
+            <h2>8. Learning Outcomes</h2>
+            <ul>
+                <li>Understood and applied modern ES6 syntax (arrow functions, template literals, block-scoped
+                    declarations).</li>
+                <li>Mastered DOM element retrieval via element identifiers.</li>
+                <li>Implemented user-driven asynchronous DOM updates using event listeners.</li>
+                <li>Learned how to manipulate inline CSS properties programmatically.</li>
+            </ul>
+            <h2>9. Conclusion</h2>
+            <p>Experiment 07 demonstrates the practical integration of modern ES6 JavaScript syntax with browser DOM
+                APIs, showing how client-side scripting enables interactive, state-responsive web interfaces without
+                third-party frameworks.</p>
+            <h2>10. Viva Questions</h2>
+            <p><strong>Q1: What is the primary difference between <code>textContent</code> and
+                    <code>innerHTML</code>?</strong><br />
+                <strong>Ans:</strong> <code>textContent</code> sets or returns the plain text content of a node and its
+                descendants without parsing HTML tags (preventing XSS attacks), whereas <code>innerHTML</code> parses
+                strings as HTML elements and renders markup.
+            </p>
+            <p><strong>Q2: What are the key advantages of ES6 arrow functions over traditional functions?</strong><br />
+                <strong>Ans:</strong> Arrow functions provide a cleaner, more concise syntax and inherit the
+                <code>this</code> context from their enclosing lexical scope rather than creating their own execution
+                context.
+            </p>
+            <p><strong>Q3: How does <code>document.getElementById()</code> locate elements in the DOM
+                    tree?</strong><br />
+                <strong>Ans:</strong> It queries the document using a unique ID attribute, performing an optimized
+                lookup that directly returns the single DOM element matching the specified identifier, or
+                <code>null</code> if not found.
+            </p>
+            <p><strong>Q4: What is the purpose of <code>addEventListener()</code> over inline HTML event handlers (e.g.,
+                    <code>onclick="..."</code>)?</strong><br />
+                <strong>Ans:</strong> <code>addEventListener()</code> cleanly separates JavaScript logic from HTML
+                markup, supports multiple listeners on the same element and event, and allows finer control over event
+                propagation phases (capturing vs bubbling).
+            </p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+
+</html>

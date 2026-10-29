@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 07: Relational Database Management and SQL Operations with PostgreSQL | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Lecture-13/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 07: Relational Database Management and SQL Operations with PostgreSQL</h1>
+<h2>1. Aim</h2>
+<p>To study and implement relational database concepts using PostgreSQL, including schema definition (DDL), table constraints, CRUD operations (DML), foreign keys, table joins, aggregate functions, ACID transactions, user role permissions, and database backup/restore operations.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To design relational schemas using PostgreSQL with primary keys, identity columns (<code>GENERATED ALWAYS AS IDENTITY</code>), unique constraints, check constraints, and timestamps.</li>
+<li>To execute Data Manipulation Language (DML) commands: inserting multiple rows, querying with filters, updating records, and deleting rows.</li>
+<li>To implement relational integrity via foreign key constraints (<code>REFERENCES</code>) across related tables (<code>students</code>, <code>departments</code>, <code>courses</code>, <code>enrollments</code>).</li>
+<li>To perform multi-table SQL queries utilizing <code>INNER JOIN</code>, <code>LEFT JOIN</code>, and table aliases.</li>
+<li>To execute aggregate functions (<code>COUNT</code>, <code>AVG</code>, <code>MAX</code>, <code>MIN</code>) and grouping with <code>GROUP BY</code> and <code>HAVING</code>.</li>
+<li>To demonstrate ACID transactions using <code>BEGIN</code>, <code>COMMIT</code>, and <code>ROLLBACK</code>.</li>
+<li>To manage database security through user role creation, privilege granting (<code>GRANT</code>), and access restriction (<code>REVOKE</code>).</li>
+<li>To create physical database dumps and backups using the <code>pg_dump</code> command-line utility.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Database Management System</strong>: PostgreSQL (v14.x or higher, tested on PostgreSQL 18.6 Homebrew)</li>
+<li><strong>Interactive Terminal</strong>: <code>psql</code> (PostgreSQL interactive terminal)</li>
+<li><strong>Utilities</strong>: <code>pg_dump</code>, <code>pg_restore</code></li>
+<li><strong>Editor</strong>: Visual Studio Code</li>
+<li><strong>Environment</strong>: macOS / Linux / Windows</li>
+</ul>
+<h2>4. Theory</h2>
+<p>PostgreSQL is a powerful, open-source object-relational database management system (ORDBMS) with a strong reputation for reliability, feature robustness, and performance:</p>
+<ol>
+<li><strong>Schema Design and Constraints</strong>:
+   - <code>PRIMARY KEY</code>: Uniquely identifies each record; PostgreSQL provides identity columns (<code>GENERATED ALWAYS AS IDENTITY</code>) conforming to SQL standards.
+   - <code>UNIQUE</code>: Enforces that all values in a column are distinct.
+   - <code>CHECK</code>: Validates that column data satisfies a boolean predicate (e.g., <code>CHECK (age &gt;= 0)</code>).
+   - <code>FOREIGN KEY</code>: Establishes referential integrity between tables, preventing orphan records.</li>
+<li><strong>SQL Joins</strong>:
+   - <code>INNER JOIN</code>: Returns rows that have matching values in both tables.
+   - <code>LEFT JOIN</code>: Returns all rows from the left table, and the matched rows from the right table (with <code>NULL</code> if no match).</li>
+<li><strong>Aggregate Functions</strong>:
+   Aggregate functions calculate a single summary result from a set of values (e.g., <code>AVG(grade)</code>, <code>COUNT(*)</code>). Grouping clauses (<code>GROUP BY</code>) partition the results into subsets for aggregate calculation.</li>
+<li><strong>ACID Transactions</strong>:
+   A transaction is a single logical unit of work that must satisfy four properties:
+   - <em>Atomicity</em>: All operations succeed, or none do (<code>ROLLBACK</code>).
+   - <em>Consistency</em>: The database moves from one valid state to another.
+   - <em>Isolation</em>: Concurrent transactions do not interfere with each other.
+   - <em>Durability</em>: Committed data is permanently saved (<code>COMMIT</code>).</li>
+<li><strong>Database Security and Backups</strong>:
+   - PostgreSQL controls access via <strong>Roles</strong>. Permissions on tables and schemas are assigned via <code>GRANT SELECT, INSERT... TO &lt;user&gt;</code> and stripped with <code>REVOKE</code>.
+   - <code>pg_dump</code> extracts a PostgreSQL database into a script file or archive containing SQL commands to recreate the schema and restore all data.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment artifacts reside in <code>Theory/Lecture-13/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture-13/postgresql.sql">postgresql.sql</a></strong>:
+  Core DDL and DML operations:
+  ```sql
+  CREATE TABLE students (
+      id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+      name VARCHAR(100) NOT NULL,
+      email VARCHAR(255) UNIQUE,
+      age INTEGER CHECK (age &gt;= 0),
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  );</p>
+<p>INSERT INTO students (name, email, age)
+  VALUES ('Alice', 'alice@example.com', 21);</p>
+<p>INSERT INTO students (name, email, age)
+  VALUES
+      ('Bob', 'bob@example.com', 19),
+      ('Carol', 'carol@example.com', 24);</p>
+<p>SELECT * FROM students;
+  <code>``
+- **[school_backup.sql](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture-13/school_backup.sql)**:
+  Comprehensive production SQL dump containing complete schema and data for</code>students<code>,</code>departments<code>,</code>courses<code>, and</code>enrollments<code>.
+- **[screenshots/](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture-13/screenshots)**:
+  Extensive terminal execution screenshots:
+  -</code>students_table.png<code>: DDL schema definition and table structure.
+  -</code>insert_data.png<code>: Multi-row INSERT statements.
+  -</code>select_queries.png<code>: Selective column and filtered queries.
+  -</code>update-delete.png<code>: Modifying and removing tuples.
+  -</code>foreign_keys.png<code>: Foreign key constraint definitions.
+  -</code>joins.png<code>: Multi-table INNER and LEFT JOIN operations.
+  -</code>aggregation.png<code>: Grouping and aggregate mathematical functions.
+  -</code>transactions.png<code>: Transaction execution (</code>BEGIN<code>,</code>COMMIT<code>,</code>ROLLBACK<code>).
+  -</code>user_permissions.png<code>: Creating users and testing granted privileges.
+  -</code>import_export.png<code>: Exporting and importing database dumps using</code>pg_dump`.</p>
+<h2>6. Procedure</h2>
+<ol>
+<li>Start PostgreSQL server and access the interactive CLI:
+   <code>bash
+   psql -U postgres
+   # or with current user:
+   psql -d postgres</code></li>
+<li>Create and connect to a practical database:
+   <code>sql
+   CREATE DATABASE school;
+   \c school</code></li>
+<li>Execute the core DDL script:
+   <code>sql
+   \i postgresql.sql</code></li>
+<li>Perform CRUD operations:
+   ```sql
+   -- Update age of Alice
+   UPDATE students SET age = 22 WHERE name = 'Alice';</li>
+</ol>
+<p>-- Delete Carol
+   DELETE FROM students WHERE email = 'carol@example.com';
+   <code>5. Test ACID Transactions:</code>sql
+   BEGIN;
+   INSERT INTO students (name, email, age) VALUES ('TempUser', 'temp@example.com', 20);
+   ROLLBACK; -- Verify record was discarded
+   <code>6. Backup the database using `pg_dump`:</code>bash
+   pg_dump -U anujsharma -d school -f school_backup.sql
+   <code>7. Verify restore capability:</code>bash
+   createdb school_test
+   psql -d school_test -f school_backup.sql
+   ```</p>
+<h2>7. Output and Results</h2>
+<p>Based on execution logs verified against screenshot artifacts:
+- <strong>Table Creation (<code>screenshots/students_table.png</code>)</strong>: Table <code>students</code> created with auto-incrementing identity primary key.
+- <strong>Data Insertion (<code>screenshots/insert_data.png</code>)</strong>: Successfully populated Alice, Bob, and Carol into the database.
+- <strong>Select Queries (<code>screenshots/select_queries.png</code>)</strong>:
+  <code>text
+   id | name  |       email       | age |         created_at
+  ----+-------+-------------------+-----+----------------------------
+    1 | Alice | alice@example.com |  21 | 2026-09-17 10:15:30.123456
+    2 | Bob   | bob@example.com   |  19 | 2026-09-17 10:15:45.654321
+    3 | Carol | carol@example.com |  24 | 2026-09-17 10:15:45.654321</code>
+- <strong>Updates and Deletions (<code>screenshots/update-delete.png</code>)</strong>: Accurately demonstrates modification and conditional deletion.
+- <strong>Joins and Aggregation (<code>screenshots/joins.png</code>, <code>screenshots/aggregation.png</code>)</strong>: Produces structured combined datasets linking students to courses and calculates department statistics.
+- <strong>Transactions (<code>screenshots/transactions.png</code>)</strong>: Successfully rolled back uncommitted changes, proving atomic rollback.
+- <strong>Backup Verification (<code>school_backup.sql</code>)</strong>: Complete backup verified as clean SQL dump containing table definitions and copy blocks.</p>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Gained comprehensive understanding of relational schema modeling in PostgreSQL.</li>
+<li>Mastered SQL Data Definition (DDL) and Data Manipulation (DML) statements.</li>
+<li>Developed proficiency in multi-table queries using relational joins.</li>
+<li>Understood the importance of transaction atomicity and access security.</li>
+<li>Learned standard database disaster recovery workflows using <code>pg_dump</code>.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 07 establishes the core foundations of relational database administration and query engineering. It verifies PostgreSQL's capability to enforce referential integrity, execute complex multi-table queries, guarantee ACID transaction consistency, and provide robust backup facilities.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the difference between <code>GENERATED ALWAYS AS IDENTITY</code> and <code>SERIAL</code> in PostgreSQL?</strong><br />
+<strong>Ans:</strong> <code>GENERATED ALWAYS AS IDENTITY</code> is the SQL standard-compliant way to create auto-incrementing integer columns in PostgreSQL 10+, whereas <code>SERIAL</code> is a legacy PostgreSQL pseudo-type that creates an implicit sequence.</p>
+<p><strong>Q2: What is the difference between <code>INNER JOIN</code> and <code>LEFT OUTER JOIN</code>?</strong><br />
+<strong>Ans:</strong> <code>INNER JOIN</code> returns only records that have matching keys in both participating tables. <code>LEFT OUTER JOIN</code> returns all records from the left table regardless of whether a matching record exists in the right table (filling unmatched fields with <code>NULL</code>).</p>
+<p><strong>Q3: How does a <code>ROLLBACK</code> statement preserve database consistency?</strong><br />
+<strong>Ans:</strong> <code>ROLLBACK</code> aborts the current transaction, undoing all pending changes made within the <code>BEGIN</code> block and returning the database to the state it was in before the transaction began.</p>
+<p><strong>Q4: What command-line tool is used to backup a PostgreSQL database to a file?</strong><br />
+<strong>Ans:</strong> <code>pg_dump</code> is used to create logical backups of a PostgreSQL database in SQL text or custom archive format.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

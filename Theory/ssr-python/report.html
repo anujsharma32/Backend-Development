@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 05: Server-Side Rendering (SSR) with FastAPI and Jinja2 | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/ssr-python/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 05: Server-Side Rendering (SSR) with FastAPI and Jinja2</h1>
+<h2>1. Aim</h2>
+<p>To design and implement a Server-Side Rendered (SSR) web application using Python, the FastAPI framework, and the Jinja2 template engine, demonstrating how dynamic HTML documents are compiled on the server before client transmission.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the architectural distinction between Client-Side Rendering (CSR) and Server-Side Rendering (SSR).</li>
+<li>To configure Jinja2 template directory resolution within FastAPI using <code>Jinja2Templates</code>.</li>
+<li>To inject dynamic Python runtime data contexts (<code>name: "Aarav"</code>) into Jinja2 template variables.</li>
+<li>To handle incoming HTTP requests using Starlette <code>Request</code> objects required by FastAPI template responses.</li>
+<li>To execute and serve HTML pages via the Uvicorn ASGI server.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language</strong>: Python (v3.8 or higher)</li>
+<li><strong>Web Framework</strong>: FastAPI</li>
+<li><strong>Template Engine</strong>: Jinja2 (<code>jinja2</code>)</li>
+<li><strong>ASGI Web Server</strong>: Uvicorn (<code>uvicorn</code>)</li>
+<li><strong>Configuration</strong>: Listed in <code>requirements.txt</code></li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Web rendering architectures dictate where HTML markup is assembled:</p>
+<ol>
+<li><strong>Server-Side Rendering (SSR) vs Client-Side Rendering (CSR)</strong>:
+   - In <em>Client-Side Rendering (CSR)</em>, the server transmits a minimal HTML shell along with JavaScript bundles. The client browser executes JavaScript to fetch data via APIs and constructs the DOM dynamically.
+   - In <em>Server-Side Rendering (SSR)</em>, the server compiles the template together with backend data directly into a complete HTML string and transmits the fully rendered page to the browser.</li>
+<li><strong>Advantages of SSR</strong>:
+   - <em>Faster First Contentful Paint (FCP)</em>: The browser can render the document immediately upon receipt without waiting for client-side JavaScript execution or supplementary API fetches.
+   - <em>Search Engine Optimization (SEO)</em>: Search engine crawlers receive complete, populated HTML content directly.</li>
+<li><strong>FastAPI &amp; Jinja2 Integration</strong>:
+   FastAPI leverages Starlette's <code>Jinja2Templates</code> utility. In FastAPI, <code>templates.TemplateResponse</code> requires passing the active <code>Request</code> instance within the context dictionary so that template helper functions (like <code>url_for</code>) can resolve absolute paths.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The project files reside in <code>Theory/ssr-python/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/ssr-python/requirements.txt">requirements.txt</a></strong>:
+  <code>text
+  fastapi
+  jinja2
+  uvicorn</code>
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/ssr-python/templates/home.html">templates/home.html</a></strong>:
+  HTML template containing title and heading:
+  ```html
+  <!DOCTYPE html></p>
+<html>
+  <head>
+    <title>SSR Demo</title>
+  </head>
+  <body>
+    <h1>Hello, Aarav!</h1>
+  </body>
+  </html>
+<p><code>- **[main.py](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/ssr-python/main.py)**:
+  FastAPI server configuring Jinja2 and dispatching the home route:</code>python
+  from fastapi import FastAPI
+  from fastapi.responses import HTMLResponse
+  from fastapi.templating import Jinja2Templates
+  from starlette.requests import Request
+  import uvicorn</p>
+<p>app = FastAPI()
+  templates = Jinja2Templates(directory="templates")</p>
+<p>@app.get("/", response_class=HTMLResponse)
+  def home(request: Request):
+      return templates.TemplateResponse("home.html", {
+          "request": request,
+          "name": "Aarav"
+      })</p>
+<p>if <strong>name</strong> == "<strong>main</strong>":
+      uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+  ```</p>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the project directory:
+   <code>bash
+   cd Theory/ssr-python</code></li>
+<li>Create and activate a Python virtual environment:
+   <code>bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate</code></li>
+<li>Install dependencies from <code>requirements.txt</code>:
+   <code>bash
+   pip install -r requirements.txt</code></li>
+<li>Start the application:
+   <code>bash
+   python main.py
+   # Or using uvicorn directly:
+   # uvicorn main:app --host 127.0.0.1 --port 8000 --reload</code></li>
+<li>Open your web browser and navigate to:
+   <code>http://127.0.0.1:8000/</code></li>
+<li>Right-click the page and select <strong>View Page Source</strong> (or press <code>Cmd+Option+U</code> / <code>Ctrl+U</code>) to confirm that the HTML delivered over the network already contains the rendered content (<code>&lt;h1&gt;Hello, Aarav!&lt;/h1&gt;</code>).</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Terminal Execution</strong>:
+  Uvicorn starts and displays:
+  <code>INFO:     Started server process [PID]
+  INFO:     Waiting for application startup.
+  INFO:     Application startup complete.
+  INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)</code></li>
+<li><strong>Browser Output</strong>:</li>
+<li>Page Title: <code>SSR Demo</code></li>
+<li>Body Content: <code>Hello, Aarav!</code></li>
+<li>Header: <code>Content-Type: text/html; charset=utf-8</code></li>
+<li><strong>Network Verification</strong>:
+  cURL inspection confirms complete HTML is transmitted directly:
+  <code>bash
+  curl -i http://127.0.0.1:8000/</code></li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood the core concepts and operational benefits of Server-Side Rendering.</li>
+<li>Configured Jinja2 templating with FastAPI and Starlette.</li>
+<li>Learned the requirement of passing the <code>Request</code> object into Jinja2 context dictionaries.</li>
+<li>Verified how SSR improves page load performance and SEO friendliness.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 05 demonstrates server-side rendering in Python using FastAPI and Jinja2. The experiment proves that FastAPI is not only adept at building high-speed JSON APIs, but also fully capable of rendering full dynamic HTML templates for web applications.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: Why is <code>request: Request</code> mandatory in the context dictionary passed to <code>templates.TemplateResponse()</code>?</strong><br />
+<strong>Ans:</strong> Starlette's <code>Jinja2Templates</code> requires the <code>request</code> instance in the template context to correctly build URLs (via <code>url_for</code>), manage CSRF tokens, and read request-specific headers or cookies during template evaluation.</p>
+<p><strong>Q2: What is the primary difference between how Jinja2 renders templates and how React/Vue render web pages?</strong><br />
+<strong>Ans:</strong> Jinja2 compiles templates on the server before transmitting finished HTML to the browser (SSR), whereas standard React/Vue apps send a JavaScript bundle to the browser which renders the DOM on the client's machine (CSR).</p>
+<p><strong>Q3: What template tags does Jinja2 use for variable interpolation and control structures?</strong><br />
+<strong>Ans:</strong> Jinja2 uses <code>&amp;#123;&amp;#123; variable &amp;#125;&amp;#125;</code> for outputting expressions and variables, <code>&amp;#123;% for ... %&amp;#125;</code> or <code>&amp;#123;% if ... %&amp;#125;</code> for control logic, and <code>&amp;#123;# comment #&amp;#125;</code> for template comments.</p>
+<p><strong>Q4: How does FastAPI specify that an endpoint returns HTML rather than default JSON?</strong><br />
+<strong>Ans:</strong> By specifying <code>response_class=HTMLResponse</code> in the route decorator, which sets the <code>Content-Type</code> header to <code>text/html</code>.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 08: Object-Relational Mapping (ORM) with SQLAlchemy and SQLite | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Lecture15/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 08: Object-Relational Mapping (ORM) with SQLAlchemy and SQLite</h1>
+<h2>1. Aim</h2>
+<p>To study and implement Object-Relational Mapping (ORM) principles in Python using SQLAlchemy and an SQLite database, demonstrating declarative schema modeling, relational foreign keys, bi-directional relationships, and complete CRUD (Create, Read, Update, Delete) lifecycle operations through an ORM Session.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the architectural advantages of Object-Relational Mapping over raw SQL queries.</li>
+<li>To configure an SQLite database connection engine and initialize a scoped session factory (<code>sessionmaker</code>).</li>
+<li>To define declarative ORM models (<code>Department</code>, <code>Student</code>, <code>Course</code>, <code>Enrollment</code>) using SQLAlchemy's <code>declarative_base</code>.</li>
+<li>To establish one-to-many and many-to-many relationship mappings using <code>ForeignKey</code> and <code>relationship(back_populates=...)</code>.</li>
+<li>To generate physical relational database tables from Python class definitions via <code>Base.metadata.create_all()</code>.</li>
+<li>To execute full CRUD operations through the SQLAlchemy session: creating entities (<code>session.add</code>), querying with filter expressions (<code>session.query().filter()</code>), updating mapped object attributes, and deleting entities (<code>session.delete()</code>).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language</strong>: Python (v3.8 or higher)</li>
+<li><strong>ORM Library</strong>: SQLAlchemy (<code>sqlalchemy</code>)</li>
+<li><strong>Database Engine</strong>: SQLite 3 (built-in Python driver)</li>
+<li><strong>Editor / IDE</strong>: Visual Studio Code</li>
+<li><strong>Environment</strong>: macOS / Linux / Windows</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Object-Relational Mapping (ORM) is a programming technique that connects the object-oriented domain model of an application with a relational database schema:</p>
+<ol>
+<li><strong>Why Use an ORM?</strong>:
+   - In raw SQL, developers must write database-specific string queries and manually map tabular tuples into program data structures.
+   - An ORM automates this translation: database tables map to Python classes, rows map to class instances, and table columns map to object attributes.
+   - ORMs provide compile-time type safety, prevent SQL injection vulnerabilities through automated query parameterization, and offer database portability (e.g., swapping SQLite for PostgreSQL without altering application code).</li>
+<li><strong>Key SQLAlchemy Components</strong>:
+   - <em>Engine (<code>create_engine</code>)</em>: Manages database connections and dialect communication.
+   - <em>Declarative Base (<code>declarative_base</code>)</em>: Base class that maintains a catalog of mapped classes and database tables.
+   - <em>Session (<code>sessionmaker</code>)</em>: Represents the "Unit of Work" pattern. The session manages the lifecycle of persistence operations and transactions, caching objects and synchronizing changes with the database upon <code>commit()</code>.</li>
+<li><strong>Relationships</strong>:
+   - <em>One-to-Many (<code>1:N</code>)</em>: One department has many students. Modeled using <code>ForeignKey("departments.id")</code> on <code>Student</code> and <code>relationship("Student", back_populates="department")</code> on <code>Department</code>.
+   - <em>Many-to-Many (<code>M:N</code>)</em>: Students and courses share an association modeled through the junction entity <code>Enrollment</code> with composite foreign keys.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment artifacts reside in <code>Theory/Lecture15/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture15/sqlalchemy_demo.py">sqlalchemy_demo.py</a></strong>:
+  Full script implementing models and CRUD lifecycle:</p>
+<ol>
+<li>
+<p><strong>Connection and Base Initialization</strong>:
+     ```python
+     from sqlalchemy import create_engine, Column, Integer, String, Date, ForeignKey
+     from sqlalchemy.orm import declarative_base, sessionmaker, relationship
+     from datetime import date</p>
+<p>engine = create_engine("sqlite:///students.db")
+ Base = declarative_base()
+ Session = sessionmaker(bind=engine)
+ session = Session()
+ ```</p>
+</li>
+<li>
+<p><strong>Model Definitions</strong>:</p>
+<ul>
+<li><code>Department</code>: <code>id</code> (PK), <code>name</code> (unique).</li>
+<li><code>Student</code>: <code>id</code> (PK), <code>name</code>, <code>email</code> (unique), <code>branch</code>, <code>enrollment_date</code>, <code>department_id</code> (FK).</li>
+<li><code>Course</code>: <code>id</code> (PK, string), <code>title</code>, <code>credits</code>, <code>department_id</code> (FK).</li>
+<li><code>Enrollment</code>: Composite PK (<code>student_id</code>, <code>course_id</code>), <code>semester</code>, <code>grade</code>.</li>
+</ul>
+</li>
+<li>
+<p><strong>Table Creation</strong>:
+     <code>python
+     Base.metadata.create_all(engine)</code></p>
+</li>
+<li>
+<p><strong>CRUD Execution</strong>:</p>
+<ul>
+<li><em>Create</em>:
+   <code>python
+   new_student = Student(
+       name="Aarav",
+       email="aarav2026@upes.ac.in",
+       branch="CSE",
+       enrollment_date=date(2024, 8, 1),
+       department_id=department.id
+   )
+   session.add(new_student)
+   session.commit()</code></li>
+<li><em>Read</em>:
+   <code>python
+   students = session.query(Student).filter(Student.branch == "CSE").all()
+   for s in students:
+       print(f"ID: {s.id} | Name: {s.name} | Email: {s.email} | Branch: {s.branch}")</code></li>
+<li><em>Update</em>:
+   <code>python
+   student = session.query(Student).filter_by(email="aarav2026@upes.ac.in").first()
+   student.branch = "ECE"
+   session.commit()</code></li>
+<li><em>Delete</em>:
+   <code>python
+   session.delete(student)
+   session.commit()</code></li>
+<li><strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture15/students.db">students.db</a></strong>:
+  Physical SQLite database generated by the script.</li>
+<li><strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture15/">Screenshots</a></strong>:</li>
+<li><code>01-SQLAlchemy-Installation.png</code>: Installation via pip.</li>
+<li><code>02-SQLAlchemy-Models.png</code>: Code architecture of declarative models.</li>
+<li><code>03-SQLAlchemy-Database-Created.png</code>: Terminal output confirming table creation.</li>
+<li><code>04-SQLAlchemy-Create.png</code>: Output of student record insertion.</li>
+<li><code>05-SQLAlchemy-Read.png</code>: Query output filtering CSE students.</li>
+<li><code>06-SQLAlchemy-Update.png</code>: Output verifying branch modification.</li>
+<li><code>07-SQLAlchemy-Delete.png</code>: Output verifying record deletion.</li>
+</ul>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the project directory:
+   <code>bash
+   cd Theory/Lecture15</code></li>
+<li>Activate a Python environment and install SQLAlchemy:
+   <code>bash
+   pip install sqlalchemy</code></li>
+<li>Run the demonstration script:
+   <code>bash
+   python sqlalchemy_demo.py</code></li>
+<li>Observe the step-by-step console outputs confirming:
+   - Database tables creation.
+   - Department insertion.
+   - Student creation and commit.
+   - Query retrieval of filtered student records.
+   - Attribute update from <code>CSE</code> to <code>ECE</code>.
+   - Record deletion and session cleanup.</li>
+<li>Inspect the generated SQLite database <code>students.db</code> using the SQLite CLI or VS Code SQLite Viewer extension:
+   <code>bash
+   sqlite3 students.db ".schema"</code></li>
+</ol>
+<h2>7. Output and Results</h2>
+<p>Based on code execution and verified against screenshot artifacts:
+- <strong>Table Creation (<code>03-SQLAlchemy-Database-Created.png</code>)</strong>:
+  Output: <code>"Database and tables created successfully!"</code>
+- <strong>Create Operation (<code>04-SQLAlchemy-Create.png</code>)</strong>:
+  Output:
+  <code>--- CREATE OPERATION ---
+  Student created successfully.
+  Name: Aarav
+  Email: aarav2026@upes.ac.in
+  Branch: CSE</code>
+- <strong>Read Operation (<code>05-SQLAlchemy-Read.png</code>)</strong>:
+  Output:
+  <code>--- READ OPERATION ---
+  CSE Students:
+  ID: 1 | Name: Aarav | Email: aarav2026@upes.ac.in | Branch: CSE</code>
+- <strong>Update Operation (<code>06-SQLAlchemy-Update.png</code>)</strong>:
+  Output:
+  <code>--- UPDATE OPERATION ---
+  Before Update:
+  Branch: CSE
+  After Update:
+  Branch: ECE
+  Student branch updated successfully.</code>
+- <strong>Delete Operation (<code>07-SQLAlchemy-Delete.png</code>)</strong>:
+  Output:
+  ```
+  --- DELETE OPERATION ---
+  Student deleted successfully.</p>
+<p>CRUD operations completed successfully!
+  ```</p>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood the architecture and practical benefits of Object-Relational Mapping with SQLAlchemy.</li>
+<li>Defined relational database schemas directly using Python object classes.</li>
+<li>Established one-to-many and junction relationships with foreign key constraints.</li>
+<li>Executed database CRUD operations through the SQLAlchemy Session unit of work.</li>
+<li>Learned how changes to object properties automatically translate to SQL UPDATE statements.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 08 demonstrates the effectiveness of SQLAlchemy ORM in modern Python backend development. By bridging the gap between relational databases and object-oriented code, SQLAlchemy enhances developer productivity, provides query safety, and simplifies complex relational modeling.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the Unit of Work pattern as implemented by SQLAlchemy's <code>Session</code>?</strong><br />
+<strong>Ans:</strong> The Unit of Work pattern keeps track of everything you do during a business transaction that can affect the database. It maintains an in-memory identity map of loaded objects and automatically batches and emits the necessary SQL INSERT, UPDATE, and DELETE statements only when <code>session.commit()</code> or <code>flush()</code> is called.</p>
+<p><strong>Q2: What is the purpose of <code>back_populates</code> in SQLAlchemy <code>relationship()</code>?</strong><br />
+<strong>Ans:</strong> <code>back_populates</code> explicitly establishes a bi-directional relationship between two models, ensuring that modifying the relationship on one side automatically synchronizes the corresponding attribute on the other side in memory.</p>
+<p><strong>Q3: How does SQLAlchemy safeguard against SQL injection attacks?</strong><br />
+<strong>Ans:</strong> SQLAlchemy automatically utilizes parameterized queries under the hood, ensuring user inputs are treated strictly as data literals rather than executable SQL code.</p>
+<p><strong>Q4: What does <code>Base.metadata.create_all(engine)</code> do?</strong><br />
+<strong>Ans:</strong> It inspects all model classes inheriting from <code>Base</code> and issues the required DDL <code>CREATE TABLE IF NOT EXISTS</code> statements to the target database engine.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

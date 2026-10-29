@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 06: State Management in Web Applications — Cookies and Sessions | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Lecture-6/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 06: State Management in Web Applications — Cookies and Sessions</h1>
+<h2>1. Aim</h2>
+<p>To study, implement, and compare client-side and server-side state management mechanisms in Node.js and Express.js by creating dedicated implementations for HTTP Cookies (using <code>cookie-parser</code>) and Server Sessions (using <code>express-session</code>), evaluating lifecycle behaviors, security flags, and session isolation.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the necessity and mechanisms of maintaining state over the stateless HTTP protocol.</li>
+<li>To implement client-side state tracking using HTTP cookies, exploring attributes like <code>maxAge</code>, <code>httpOnly</code>, and <code>secure</code> (Part A: Cookies).</li>
+<li>To perform cookie creation (<code>res.cookie</code>), retrieval (<code>req.cookies</code>), and deletion (<code>res.clearCookie</code>).</li>
+<li>To implement server-side session management using signed session identifiers (Part B: Sessions).</li>
+<li>To manage session lifecycles: establishing session variables (<code>/login</code>), authorizing protected access (<code>/profile</code>), and destroying active sessions (<code>/logout</code>).</li>
+<li>To analyze network request/response headers and browser storage mechanisms using browser developer tools.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime Environment</strong>: Node.js (v16.x or higher)</li>
+<li><strong>Web Framework</strong>: Express.js (<code>^4.19.2</code>)</li>
+<li><strong>Middlewares</strong>: <code>cookie-parser</code> (<code>^1.4.6</code>), <code>express-session</code> (<code>^1.18.0</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Modern Web Browser with Developer Tools (Console and Application tabs)</li>
+</ul>
+<h2>4. Theory</h2>
+<p>HTTP is a stateless protocol where the web server treats each incoming request independently. Web applications overcome this limitation through two primary patterns:</p>
+<h3>Part A: Cookies (Client-Side State Storage)</h3>
+<ul>
+<li><strong>Concept</strong>: Small text-based key-value pairs stored directly by the client browser. When the server sends a <code>Set-Cookie</code> header, the browser stores the cookie and automatically attaches it in the <code>Cookie</code> header on subsequent requests to that domain.</li>
+<li><strong>Key Attributes</strong>:</li>
+<li><code>maxAge</code>: Expiration time in milliseconds (e.g., <code>3600000</code> ms = 1 hour).</li>
+<li><code>httpOnly: true</code>: Restricts access to the cookie from client-side scripts (<code>document.cookie</code>), mitigating Cross-Site Scripting (XSS) attacks.</li>
+<li><code>secure: true</code>: Mandates that the cookie only be transmitted over encrypted HTTPS connections.</li>
+</ul>
+<h3>Part B: Sessions (Server-Side State Storage)</h3>
+<ul>
+<li><strong>Concept</strong>: User data is maintained securely on the server (in memory or database). The client only stores an encrypted session ID cookie (<code>connect.sid</code>).</li>
+<li><strong>Mechanism</strong>: The incoming session ID acts as an index to look up user data in the server store, populating <code>req.session</code>.</li>
+<li><strong>Security Advantage</strong>: Sensitive data (such as user credentials, permissions, and roles) is never exposed to the client machine or network payload.</li>
+</ul>
+<hr />
+<h2>5. Implementation</h2>
+<p>The experiment is organized into two distinct modules in <code>Theory/Lecture-6/</code>:</p>
+<h3>Module 1: Cookies (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture-6/Cookies/app.js">Cookies/app.js</a>)</h3>
+<p>Uses <code>cookie-parser</code> middleware to parse incoming cookie headers into <code>req.cookies</code>:
+1. <strong>Set Cookie (<code>GET /setcookie</code>)</strong>:
+   <code>javascript
+   app.get('/setcookie', (req, res) =&gt; {
+       res.cookie('username', 'JohnDoe', {
+           maxAge: 3600000,
+           httpOnly: true,
+           secure: false
+       });
+       res.send(`&lt;h2&gt;Cookie has been set!&lt;/h2&gt;...`);
+   });</code>
+2. <strong>Read Cookie (<code>GET /getcookie</code>)</strong>:
+   Checks <code>req.cookies.username</code> and returns personalized greeting if present:
+   <code>javascript
+   app.get('/getcookie', (req, res) =&gt; {
+       const user = req.cookies.username;
+       if (user) {
+           res.send(`&lt;h2&gt;Welcome back, ${user}&lt;/h2&gt;...`);
+       } else {
+           res.send(`&lt;h2&gt;No cookie found.&lt;/h2&gt;...`);
+       }
+   });</code>
+3. <strong>Delete Cookie (<code>GET /deletecookie</code>)</strong>:
+   Instructs the browser to clear the cookie:
+   <code>javascript
+   app.get('/deletecookie', (req, res) =&gt; {
+       res.clearCookie('username');
+       res.send(`&lt;h2&gt;Cookie deleted.&lt;/h2&gt;...`);
+   });</code></p>
+<h3>Module 2: Sessions (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture-6/Sessions/app.js">Sessions/app.js</a>)</h3>
+<p>Uses <code>express-session</code> middleware:
+1. <strong>Middleware Setup</strong>:
+   <code>javascript
+   app.use(session({
+       secret: 'mySecretKey',
+       resave: false,
+       saveUninitialized: true,
+       cookie: { maxAge: 60000 }
+   }));</code>
+2. <strong>Session Creation / Login (<code>GET /login</code>)</strong>:
+   Sets <code>req.session.username = 'JohnDoe'</code> and logs the session ID.
+3. <strong>Protected Profile (<code>GET /profile</code>)</strong>:
+   Verifies whether <code>req.session.username</code> exists; if so, displays profile details; otherwise prompts user to log in.
+4. <strong>Session Destruction / Logout (<code>GET /logout</code>)</strong>:
+   Calls <code>req.session.destroy()</code> to remove the session from server memory.</p>
+<hr />
+<h2>6. Procedure</h2>
+<h3>Testing Cookies:</h3>
+<ol>
+<li>Navigate to the Cookies folder:
+   <code>bash
+   cd Theory/Lecture-6/Cookies
+   npm install
+   node app.js</code></li>
+<li>Open <code>http://localhost:3000/setcookie</code> in your browser. Inspect the console and verify that the cookie is stored in DevTools (<strong>Application &gt; Cookies</strong>).</li>
+<li>Open <code>http://localhost:3000/getcookie</code> and observe the welcome message.</li>
+<li>Open <code>http://localhost:3000/deletecookie</code> and verify that the cookie is removed.</li>
+<li>Revisit <code>/getcookie</code> and observe <code>"No cookie found"</code>.</li>
+</ol>
+<h3>Testing Sessions:</h3>
+<ol>
+<li>Navigate to the Sessions folder:
+   <code>bash
+   cd Theory/Lecture-6/Sessions
+   npm install
+   node app.js</code></li>
+<li>Visit <code>http://localhost:3000/profile</code> before logging in to observe the unauthorized state.</li>
+<li>Visit <code>http://localhost:3000/login</code> to start the session. Inspect the console to view the assigned Session ID.</li>
+<li>Visit <code>http://localhost:3000/profile</code> to view active session data.</li>
+<li>Visit <code>http://localhost:3000/logout</code> to destroy the session.</li>
+</ol>
+<hr />
+<h2>7. Output and Results</h2>
+<p>Verified against the repository screenshots:</p>
+<h3>Cookies Outputs:</h3>
+<ul>
+<li><strong>Cookie Set (<code>Cookies/01-Cookie-Set.png</code>)</strong>:
+  Console logs: <code>Cookie Name: username | Cookie Value: JohnDoe | Cookie Duration: 1 hour | Cookie set successfully</code>.</li>
+<li><strong>Cookie Read (<code>Cookies/02-Cookie-Read.png</code>)</strong>:
+  Browser displays <em>"Welcome back, JohnDoe"</em>. Console confirms successful retrieval.</li>
+<li><strong>Cookie Deleted (<code>Cookies/03-Cookie-Deleted.png</code>)</strong>:
+  Displays <em>"Cookie deleted"</em> and verifies removal.</li>
+<li><strong>Cookie Not Found (<code>Cookies/04-Cookie-Not-Found.png</code>)</strong>:
+  After deletion or expiration, displays <em>"No cookie found."</em></li>
+</ul>
+<h3>Sessions Outputs:</h3>
+<ul>
+<li><strong>Server Started (<code>Sessions/Server-Started.png.png</code>)</strong>:
+  Confirms server initialization on port 3000.</li>
+<li><strong>Session Login (<code>Sessions/Session-Started-Login.png</code>)</strong>:
+  Displays <em>"Session Started"</em> with username JohnDoe and logs generated Session ID.</li>
+<li><strong>Session Logout (<code>Sessions/Session-Destroyed-Logout.png</code>)</strong>:
+  Displays <em>"Session Destroyed"</em> and confirms cleanup of session ID.</li>
+</ul>
+<hr />
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood the practical differences between client-side cookies and server-side sessions.</li>
+<li>Learned how to configure and utilize <code>cookie-parser</code> and <code>express-session</code> middlewares.</li>
+<li>Implemented security attributes (<code>httpOnly</code>, <code>secret</code>) to protect state data against XSS and tampering.</li>
+<li>Mastered user authentication flow patterns (login, protected access, session termination).</li>
+</ul>
+<hr />
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 06 provides a comparative implementation of state management in modern backend systems. Cookies offer lightweight client-side persistence, while sessions provide robust, tamper-resistant state storage for sensitive authentication workflows.</p>
+<hr />
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What does the <code>httpOnly</code> flag do when setting a cookie?</strong><br />
+<strong>Ans:</strong> The <code>httpOnly</code> flag prevents client-side scripts from accessing the cookie via <code>document.cookie</code>. This mitigates the risk of session hijacking via Cross-Site Scripting (XSS) attacks.</p>
+<p><strong>Q2: What is the main security advantage of sessions over cookies?</strong><br />
+<strong>Ans:</strong> Sessions store sensitive data on the server; the client only holds a signed session identifier. In contrast, plain cookies store data on the client device where it can potentially be inspected or modified if not signed.</p>
+<p><strong>Q3: How does <code>res.clearCookie()</code> remove a cookie from the browser?</strong><br />
+<strong>Ans:</strong> It sends a <code>Set-Cookie</code> header for the specified cookie name with an expiration date set in the past, prompting the browser to immediately delete the cookie from its store.</p>
+<p><strong>Q4: What occurs when <code>req.session.destroy()</code> is executed?</strong><br />
+<strong>Ans:</strong> It removes the session record associated with the current request's session ID from the server-side session store, invalidating any future requests presenting that session ID.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 12B: Session-Based State Management and To-Do List Application with Express.js | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exp12B/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 12B: Session-Based State Management and To-Do List Application with Express.js</h1>
+<h2>1. Aim</h2>
+<p>To implement a stateful server-side web application in Node.js and Express.js using <code>express-session</code> to manage user-specific tasks in an interactive To-Do List Manager without requiring a persistent database.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To configure and integrate the <code>express-session</code> middleware in an Express.js application.</li>
+<li>To store, update, and manage session-scoped state (<code>req.session.todos</code>) across multiple HTTP request-response cycles.</li>
+<li>To handle form-based data submission (<code>POST /add</code>) using URL-encoded body parsing.</li>
+<li>To implement item deletion (<code>POST /delete/:id</code>) using route parameters and session array filtering.</li>
+<li>To prevent Cross-Site Scripting (XSS) by sanitizing user-generated text inputs prior to rendering.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime Environment</strong>: Node.js</li>
+<li><strong>Framework</strong>: Express.js (<code>^5.3.0</code>)</li>
+<li><strong>Session Middleware</strong>: <code>express-session</code> (<code>^1.19.0</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>HTTP is inherently a stateless protocol; each request from a client is processed independently without implicit memory of prior interactions. Web applications achieve statefulness through session management:</p>
+<ol>
+<li><strong>Session-Based State Management</strong>:
+   When a user connects, the server creates a unique session record stored in server-side memory (or an external store like Redis/database) and assigns a unique, cryptographically signed Session ID.</li>
+<li><strong>Session Cookie</strong>:
+   The Session ID is returned to the client in a <code>Set-Cookie</code> header and stored in the browser. In subsequent requests, the browser sends this cookie automatically, allowing the server to look up the session store and populate <code>req.session</code>.</li>
+<li><strong>Session Configuration Options</strong>:
+   - <code>secret</code>: A secret string used to sign the session ID cookie to prevent tampering.
+   - <code>resave: false</code>: Prevents saving the session back to the store if it was not modified during the request.
+   - <code>saveUninitialized: false</code>: Reduces server storage usage by avoiding saving uninitialized (empty) sessions until data is explicitly stored.</li>
+<li><strong>Input Sanitization</strong>:
+   When dynamically injecting user text into HTML strings, special characters (<code>&lt;</code>, <code>&gt;</code>, <code>&amp;</code>) must be converted to HTML entities (<code>&amp;lt;</code>, <code>&amp;gt;</code>, <code>&amp;amp;</code>) to safeguard against Cross-Site Scripting (XSS) vulnerabilities.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment is implemented in:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12B/package.json">package.json</a></strong>: Declares project metadata and dependencies (<code>express</code> and <code>express-session</code>).
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12B/server.js">server.js</a></strong>:
+  Contains the application logic and routes:</p>
+<ol>
+<li>
+<p><strong>Session Setup</strong>:
+     ```javascript
+     const express = require("express");
+     const session = require("express-session");</p>
+<p>const app = express();
+ const PORT = 3000;</p>
+<p>app.use(express.urlencoded({ extended: true }));
+ app.use(
+   session({
+     secret: "my-secret-key",
+     resave: false,
+     saveUninitialized: false
+   })
+ );
+ ```</p>
+</li>
+<li>
+<p><strong>View and List Route (<code>GET /</code>)</strong>:
+     Retrieves <code>req.session.todos</code>, sanitizes strings against XSS, and renders an HTML document containing the input form and dynamic list of tasks with individual deletion buttons:
+     ```javascript
+     app.get("/", (req, res) =&gt; {
+       if (!req.session.todos) {
+         req.session.todos = [];
+       }</p>
+<p>const tasks = req.session.todos
+     .map((item, index) =&gt; <code>&lt;li&gt;
+         ${item.replace(/&amp;/g, "&amp;amp;").replace(/&lt;/g, "&amp;lt;").replace(/&gt;/g, "&amp;gt;")}
+         &lt;form action="/delete/${index}" method="POST"&gt;
+           &lt;button type="submit"&gt;Delete&lt;/button&gt;
+         &lt;/form&gt;
+       &lt;/li&gt;</code>)
+     .join("");</p>
+<p>res.send(<code>...</code>);
+ });
+ ```</p>
+</li>
+<li>
+<p><strong>Task Addition Route (<code>POST /add</code>)</strong>:
+     Extracts <code>req.body.todoItem</code>, appends the non-empty trimmed item to <code>req.session.todos</code>, and issues an HTTP redirect (<code>res.redirect("/")</code>) implementing the Post/Redirect/Get (PRG) pattern:
+     <code>javascript
+     app.post("/add", (req, res) =&gt; {
+       if (!req.session.todos) req.session.todos = [];
+       const item = (req.body.todoItem || "").trim();
+       if (item) req.session.todos.push(item);
+       res.redirect("/");
+     });</code></p>
+</li>
+<li>
+<p><strong>Task Deletion Route (<code>POST /delete/:id</code>)</strong>:
+     Extracts the target task index from <code>req.params.id</code>, validates boundaries, filters the array, and redirects back to <code>/</code>:
+     <code>javascript
+     app.post("/delete/:id", (req, res) =&gt; {
+       const id = Number(req.params.id);
+       if (req.session.todos &amp;&amp; id &gt;= 0 &amp;&amp; id &lt; req.session.todos.length) {
+         req.session.todos = req.session.todos.filter((item, index) =&gt; index !== id);
+       }
+       res.redirect("/");
+     });</code>
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp12B/public/style.css">public/style.css</a></strong>:
+  Reserved stylesheet file for future external UI customization.</p>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the experiment directory:
+   <code>bash
+   cd Lab/Exp12B</code></li>
+<li>Install project dependencies:
+   <code>bash
+   npm install</code></li>
+<li>Start the application server:
+   <code>bash
+   npm start
+   # or: node server.js</code></li>
+<li>Open a web browser and navigate to:
+   <code>http://localhost:3000/</code></li>
+<li><strong>Adding Tasks</strong>:
+   - Type a task into the "Enter a task" input field and click <strong>Add Task</strong>.
+   - Verify that the page reloads and displays the task under "My Tasks".</li>
+<li><strong>Testing Session Isolation</strong>:
+   - Open a private/incognito browsing window and visit <code>http://localhost:3000/</code>.
+   - Verify that tasks added in the first window do not appear in the incognito window (confirming session isolation).</li>
+<li><strong>Deleting Tasks</strong>:
+   - Click the <strong>Delete</strong> button next to a task and verify that the task is removed from the session list.</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Initial Load</strong>:
+  Renders title <em>"To-Do List Manager"</em>, input form, and the empty message: <em>"No tasks added yet."</em></li>
+<li><strong>After Adding Items</strong>:
+  Lists all added items as HTML list elements with associated Delete form buttons.</li>
+<li><strong>Session Persistence</strong>:
+  Tasks remain present across page refreshes for the active browser session.</li>
+<li><strong>Post-Deletion</strong>:
+  Target item is removed and remaining items re-render correctly.</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood state management techniques in stateless HTTP environments.</li>
+<li>Implemented <code>express-session</code> for storing user-specific data server-side.</li>
+<li>Practiced the Post/Redirect/Get (PRG) pattern to prevent duplicate form submissions upon page refresh.</li>
+<li>Gained awareness of security practices such as HTML character escaping to mitigate XSS attacks.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Experiment 12B successfully demonstrates session-based state management using Node.js and Express. It confirms that <code>express-session</code> provides an effective mechanism for managing client-specific application state across HTTP transactions without requiring database persistence.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: How does a server associate an incoming request with an existing session?</strong><br />
+<strong>Ans:</strong> The server generates a unique session ID, stores it in an HTTP cookie in the user's browser, and uses that cookie on subsequent requests to retrieve the corresponding session data from the server's session store.</p>
+<p><strong>Q2: What is the purpose of the Post/Redirect/Get (PRG) pattern used in <code>/add</code>?</strong><br />
+<strong>Ans:</strong> The PRG pattern redirects the browser to a <code>GET</code> route after a successful <code>POST</code> request. This prevents duplicate form submissions if the user refreshes the page.</p>
+<p><strong>Q3: Why is <code>saveUninitialized: false</code> recommended in session configuration?</strong><br />
+<strong>Ans:</strong> It avoids saving uninitialized (empty/new) sessions to the session store until data is actively written, reducing storage overhead and complying with privacy regulations.</p>
+<p><strong>Q4: Where does <code>express-session</code> store session data by default, and why is it not suitable for production?</strong><br />
+<strong>Ans:</strong> By default, it uses <code>MemoryStore</code> (in-memory RAM), which causes memory leaks in high-traffic applications, does not scale across multiple server processes/instances, and loses all session data when the server restarts.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

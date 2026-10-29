@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Experiment 08: Event Handling and Interactive To-Do List | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exp08/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Experiment 08: Event Handling and Interactive To-Do List</h1>
+<h2>1. Aim</h2>
+<p>To understand client-side JavaScript event handling mechanisms and implement an interactive, state-driven To-Do List web application utilizing event listeners, event delegation, and dynamic DOM manipulation.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand JavaScript event handling and implement an interactive To-Do List application.</li>
+<li>To handle multiple event types including mouse click events (<code>click</code>) and keyboard input events (<code>keydown</code> for the <code>Enter</code> key).</li>
+<li>To implement event delegation on dynamic list elements using <code>event.target</code> and <code>closest()</code>.</li>
+<li>To manage application state in memory using an ES6 class (<code>Task</code>) and immutable array operations (<code>spread</code>, <code>filter</code>, <code>map</code>).</li>
+<li>To dynamically create, mount, style, and remove DOM nodes (<code>document.createElement</code>, <code>classList</code>, <code>appendChild</code>).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Software / Tools</strong>: Visual Studio Code, Google Chrome (or any modern web browser)</li>
+<li><strong>Languages</strong>: HTML5, CSS3, JavaScript (ECMAScript 2015 / ES6)</li>
+<li><strong>External Dependencies</strong>: None (pure client-side implementation)</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Events are browser actions or occurrences that happen in the system being programmed (such as user clicks, keystrokes, or page loading). JavaScript uses event listeners to respond to these actions:</p>
+<ul>
+<li><strong>Event Listeners</strong>: Attached to DOM elements via <code>addEventListener(type, callback)</code>. They listen for specific events and execute handler functions asynchronously.</li>
+<li><strong>Event Delegation</strong>: Instead of binding individual event listeners to every list item (which wastes memory and fails on newly created items), a single event listener is attached to the parent container (<code>&lt;ul&gt;</code>). When a child element is clicked, the event bubbles up to the parent where <code>event.target</code> or <code>event.target.closest()</code> identifies the specific item acted upon.</li>
+<li><strong>Dynamic DOM Rendering</strong>: The application maintains a single source of truth in a <code>tasks</code> array. Whenever state changes (adding, toggling, or deleting a task), a <code>renderTasks()</code> function re-renders the list by programmatically creating <code>&lt;li&gt;</code>, <code>&lt;span&gt;</code>, and <code>&lt;button&gt;</code> elements.</li>
+<li><strong>CSS Class Toggling</strong>: Task completion status is visually represented by adding or removing CSS classes (<code>.done</code> with <code>text-decoration: line-through; color: #888;</code>).</li>
+</ul>
+<h2>5. Implementation</h2>
+<p>The application is structured into:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp08/index.html">index.html</a></strong>:
+  Contains the application layout with title, input text field (<code>#taskInput</code>), add button (<code>#addBtn</code>), and an empty unordered list container (<code>&lt;ul id="taskList"&gt;</code>).
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp08/app.js">app.js</a></strong>:
+  Encapsulates data models and interaction logic:</p>
+<ol>
+<li><strong>Task Model</strong>:
+     <code>javascript
+     class Task {
+         constructor(title) {
+             this.id = Date.now() + Math.random();
+             this.title = title;
+             this.completed = false;
+         }
+     }</code></li>
+<li><strong>Task Addition</strong>:
+     Handles input retrieval, validation (trimming whitespace), instantiating a new <code>Task</code>, appending to the state array, and resetting the input field:
+     <code>javascript
+     const addTask = () =&gt; {
+         const title = input.value.trim();
+         if (!title) {
+             input.focus();
+             return;
+         }
+         tasks = [...tasks, new Task(title)];
+         input.value = "";
+         renderTasks();
+         input.focus();
+     };</code></li>
+<li><strong>Event Binding &amp; Keyboard Accessibility</strong>:
+     Listens for button clicks and the <code>Enter</code> keypress on the input field:
+     <code>javascript
+     addBtn.addEventListener("click", addTask);
+     input.addEventListener("keydown", (event) =&gt; {
+         if (event.key === "Enter") addTask();
+     });</code></li>
+<li><strong>Event Delegation on Task List</strong>:
+     Handles both task completion toggling and task deletion from a single listener:
+     ```javascript
+     list.addEventListener("click", (event) =&gt; {
+         const li = event.target.closest("li");
+         if (!li) return;
+         const id = Number(li.dataset.id);<pre><code> if (event.target.classList.contains("delete-btn")) {
+     tasks = tasks.filter(task =&gt; task.id !== id);
+ } else {
+     tasks = tasks.map(task =&gt;
+         task.id === id ? { ...task, completed: !task.completed } : task
+     );
+ }
+ renderTasks();
+</code></pre>
+<p>});
+ ```</p>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the experiment directory:
+   <code>bash
+   cd Lab/Exp08</code></li>
+<li>Open <a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exp08/index.html">index.html</a> in any modern web browser.</li>
+<li><strong>Adding a Task</strong>:
+   - Type a task description (e.g., "Complete Backend Assignment") into the input box.
+   - Click the <strong>Add Task</strong> button or press the <strong>Enter</strong> key.</li>
+<li><strong>Marking as Complete</strong>:
+   - Click directly on the task text to toggle completion (applies strikethrough styling).</li>
+<li><strong>Deleting a Task</strong>:
+   - Click the red <strong>Delete</strong> button beside any task to remove it from the list.</li>
+</ol>
+<h2>7. Output and Results</h2>
+<p>Verified against the repository screenshots:
+- <strong>Initial View (<code>Screenshots/initial_output.png</code>)</strong>: Displays input field with placeholder "Enter a task..." and the Add Task button with an empty task container.
+- <strong>Task Addition (<code>Screenshots/add_task.png</code>)</strong>: Newly added tasks appear as formatted list items with individual delete buttons.
+- <strong>Task Completion (<code>Screenshots/complete_task.png</code>)</strong>: Clicking an item applies <code>.done</code> class styling with strikethrough decoration.
+- <strong>Result Summary</strong>: The interactive To-Do List was implemented and tested. Tasks can be added, marked as completed, and deleted using event listeners.
+- <strong>Live Output</strong>: Accessible via GitHub Pages at <code>https://anujsharma32.github.io/Backend-Development/Lab/Exp08/</code>.</p>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Demonstrated proficiency in event-driven JavaScript programming.</li>
+<li>Applied the event delegation pattern to efficiently manage events for dynamically generated elements.</li>
+<li>Maintained clean separation of concerns by driving UI rendering from an in-memory data state.</li>
+<li>Utilized modern ES6 syntax including classes, spread syntax, and array methods (<code>filter</code>, <code>map</code>, <code>forEach</code>).</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Experiment 08 illustrates the core principles of client-side web application development: responding to user events, maintaining state, and synchronizing state changes with dynamic updates to the Document Object Model.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is event bubbling and how does event delegation leverage it?</strong><br />
+<strong>Ans:</strong> Event bubbling is the phase where an event triggered on a child node propagates upward through its parent ancestors in the DOM tree. Event delegation attaches a single handler to a parent container to capture events originating from current or future child elements.</p>
+<p><strong>Q2: Why is <code>event.target.closest('li')</code> useful in event delegation?</strong><br />
+<strong>Ans:</strong> <code>closest()</code> traverses the element and its ancestors upward until it finds the nearest matching selector, ensuring the correct parent list item is referenced even if the user clicks a nested child like a <code>&lt;span&gt;</code>.</p>
+<p><strong>Q3: What is the difference between <code>event.preventDefault()</code> and <code>event.stopPropagation()</code>?</strong><br />
+<strong>Ans:</strong> <code>preventDefault()</code> stops the browser's default action for the event (e.g., submitting a form or following a link), while <code>stopPropagation()</code> halts the bubbling of the event up the DOM tree.</p>
+<p><strong>Q4: Why use immutable array operations (<code>filter</code>, <code>map</code>, spread) rather than mutating the array directly (<code>splice</code>)?</strong><br />
+<strong>Ans:</strong> Immutable updates prevent unintended side effects, make application state predictable and easier to debug, and align with patterns widely used in modern reactive frameworks.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

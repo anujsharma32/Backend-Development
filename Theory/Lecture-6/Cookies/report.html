@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 06A: Cookie Management with Express.js | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Lecture-6/Cookies/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 06A: Cookie Management with Express.js</h1>
+<h2>1. Aim</h2>
+<p>To implement and analyze client-side state persistence in Node.js and Express.js using the <code>cookie-parser</code> middleware, demonstrating how to set, read, configure security attributes for, and delete HTTP cookies.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the role of HTTP cookies in client-side state persistence.</li>
+<li>To configure the <code>cookie-parser</code> middleware in an Express.js application.</li>
+<li>To set cookies with security flags (<code>httpOnly</code>, <code>maxAge</code>) via <code>res.cookie()</code>.</li>
+<li>To read incoming cookies from request headers via <code>req.cookies</code>.</li>
+<li>To delete cookies using <code>res.clearCookie()</code> and verify expiration behavior.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime Environment</strong>: Node.js</li>
+<li><strong>Framework</strong>: Express.js (<code>^4.19.2</code>)</li>
+<li><strong>Middleware</strong>: <code>cookie-parser</code> (<code>^1.4.6</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser with DevTools (Application &gt; Cookies)</li>
+</ul>
+<h2>4. Theory</h2>
+<p>An HTTP cookie is a small piece of data that a server sends to the user's web browser:
+- The browser stores the cookie and sends it back to the server with later requests to the same domain.
+- <code>maxAge</code>: Specifies cookie lifespan in milliseconds.
+- <code>httpOnly: true</code>: Blocks client-side JavaScript access via <code>document.cookie</code> to prevent XSS-based credential theft.
+- <code>secure: false</code>: Allows transmission over unencrypted HTTP for local development.</p>
+<h2>5. Implementation</h2>
+<p>Implemented in <a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture-6/Cookies/app.js">Theory/Lecture-6/Cookies/app.js</a>:
+- <strong>Set Cookie (<code>/setcookie</code>)</strong>: Sets <code>username</code> to <code>'JohnDoe'</code> with <code>maxAge: 3600000</code> (1 hour) and <code>httpOnly: true</code>.
+- <strong>Read Cookie (<code>/getcookie</code>)</strong>: Checks <code>req.cookies.username</code> and returns greeting or "No cookie found."
+- <strong>Delete Cookie (<code>/deletecookie</code>)</strong>: Clears cookie via <code>res.clearCookie('username')</code>.</p>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to directory:
+   <code>bash
+   cd Theory/Lecture-6/Cookies</code></li>
+<li>Install dependencies:
+   <code>bash
+   npm install</code></li>
+<li>Start server:
+   <code>bash
+   node app.js</code></li>
+<li>Test endpoints:
+   - <code>http://localhost:3000/setcookie</code> (Sets cookie)
+   - <code>http://localhost:3000/getcookie</code> (Reads cookie)
+   - <code>http://localhost:3000/deletecookie</code> (Clears cookie)
+   - <code>http://localhost:3000/getcookie</code> (Confirms deletion)</li>
+</ol>
+<h2>7. Output and Results</h2>
+<p>Verified against repository screenshots:
+- <code>01-Cookie-Set.png</code>: Logs cookie creation (<code>username: JohnDoe</code>, duration 1 hour).
+- <code>02-Cookie-Read.png</code>: Displays "Welcome back, JohnDoe".
+- <code>03-Cookie-Deleted.png</code>: Confirms cookie deletion.
+- <code>04-Cookie-Not-Found.png</code>: Confirms cookie no longer exists.</p>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Mastered setting, reading, and clearing cookies in Express.js.</li>
+<li>Understood the importance of <code>httpOnly</code> for web application security.</li>
+<li>Inspected cookie transmission in HTTP request/response headers.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Experiment 06A demonstrates how cookies provide a straightforward mechanism for client-side state persistence across HTTP requests.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the purpose of <code>cookie-parser</code>?</strong><br />
+<strong>Ans:</strong> It parses the <code>Cookie</code> header on incoming requests and populates <code>req.cookies</code> with an object keyed by cookie names.</p>
+<p><strong>Q2: What is the default lifespan of a session cookie if <code>maxAge</code> is not specified?</strong><br />
+<strong>Ans:</strong> A session cookie without an expiration or maxAge attribute is stored in memory and deleted when the browser closes.</p>
+<p><strong>Q3: Can client-side JavaScript access an <code>httpOnly</code> cookie?</strong><br />
+<strong>Ans:</strong> No, <code>httpOnly</code> cookies cannot be accessed via <code>document.cookie</code>, protecting them from XSS attacks.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

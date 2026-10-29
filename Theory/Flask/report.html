@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 02: Backend Web Server Implementation with Flask | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Flask/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 02: Backend Web Server Implementation with Flask</h1>
+<h2>1. Aim</h2>
+<p>To create and run a lightweight backend web application using Python and the Flask micro-framework, understanding WSGI server architecture, URL routing decorators, and development server configuration.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the architecture and philosophy of micro-frameworks in Python web development.</li>
+<li>To initialize a Flask application instance and configure development execution parameters (<code>debug=True</code>).</li>
+<li>To map URL endpoints to Python view functions using <code>@app.route()</code> decorators.</li>
+<li>To execute the development server and test HTTP request-response delivery across network sockets.</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language</strong>: Python (v3.8 or higher)</li>
+<li><strong>Framework</strong>: Flask (<code>flask</code>)</li>
+<li><strong>Server Gateway</strong>: WSGI (Werkzeug development server)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Flask is a lightweight WSGI web application framework in Python designed to make getting started quick and easy, with the ability to scale up to complex applications:</p>
+<ol>
+<li><strong>Micro-framework Architecture</strong>:
+   Flask is classified as a micro-framework because it does not require particular tools or libraries (such as database abstraction layers or form validation components) out of the box. Extensions can be plugged in as needed, keeping the core codebase minimal and flexible.</li>
+<li><strong>WSGI (Web Server Gateway Interface)</strong>:
+   Flask implements the WSGI specification (PEP 3333), which defines a universal calling convention for web servers to forward requests to Python web applications.</li>
+<li><strong>Route Decorators</strong>:
+   Flask uses Python decorators (<code>@app.route('/path')</code>) to bind URL patterns to view handler functions. When a matching HTTP request arrives, Flask dispatches the request to the corresponding Python function and returns its response.</li>
+<li><strong>Debug Mode</strong>:
+   Running Flask with <code>debug=True</code> enables an interactive in-browser debugger for tracebacks and enables the Werkzeug file watcher (auto-reloader), which automatically restarts the server whenever code changes are saved.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The application is located in <code>Theory/Flask/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Flask/backend-project/app.py">backend-project/app.py</a></strong>:
+  Complete application implementation:
+  ```python
+  from flask import Flask</p>
+<p>app = Flask(<strong>name</strong>)</p>
+<p>@app.route("/")
+  def home():
+      return "Backend Server Running"</p>
+<p>if <strong>name</strong> == "<strong>main</strong>":
+      app.run(debug=True)
+  ```</p>
+<h3>Breakdown of Implementation Components:</h3>
+<ul>
+<li><code>Flask(__name__)</code>: Initializes the core WSGI application instance. The <code>__name__</code> argument tells Flask where to locate resources, templates, and static assets.</li>
+<li><code>@app.route("/")</code>: Decorates the <code>home()</code> function, instructing Flask to execute it whenever an HTTP GET request arrives at the root path (<code>/</code>).</li>
+<li><code>def home()</code>: View function returning a plain text string <code>"Backend Server Running"</code>. Flask automatically converts returned strings into valid HTTP responses with <code>Content-Type: text/html; charset=utf-8</code> and status code <code>200 OK</code>.</li>
+<li><code>app.run(debug=True)</code>: Runs the local Werkzeug HTTP development server bound to <code>127.0.0.1:5000</code> with hot-reloading and active debugging.</li>
+</ul>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the project directory:
+   <code>bash
+   cd Theory/Flask/backend-project</code></li>
+<li>Set up and activate a Python virtual environment:
+   <code>bash
+   python3 -m venv venv
+   source venv/bin/activate  # On Windows: venv\Scripts\activate</code></li>
+<li>Install Flask:
+   <code>bash
+   pip install Flask</code></li>
+<li>Start the Flask application:
+   <code>bash
+   python app.py
+   # Or using the Flask CLI:
+   # export FLASK_APP=app.py &amp;&amp; flask run</code></li>
+<li>Observe terminal output confirming the server is listening:
+   <code>* Serving Flask app 'app'
+   * Debug mode: on
+   * Running on http://127.0.0.1:5000</code></li>
+<li>Open <code>http://127.0.0.1:5000/</code> in a web browser or run cURL:
+   <code>bash
+   curl http://127.0.0.1:5000/</code></li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Terminal Logs</strong>: Confirms WSGI server initialization on port 5000 with debug mode enabled.</li>
+<li><strong>HTTP Response</strong>:</li>
+<li>Request: <code>GET /</code></li>
+<li>Response Code: <code>200 OK</code></li>
+<li>Response Body: <code>"Backend Server Running"</code></li>
+<li>Content-Type: <code>text/html; charset=utf-8</code></li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Gained fundamental understanding of Python web application mechanics.</li>
+<li>Learned how Flask leverages Python function decorators for declarative routing.</li>
+<li>Configured local WSGI development environments with live reloading.</li>
+<li>Understood how Python view functions process requests and return HTTP responses.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 02 demonstrates how quickly a functional web server can be constructed using Python and Flask. Its simple, unopinionated structure provides an ideal foundation for learning backend concepts and building modular web services.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What does WSGI stand for and what is its role in Python web applications?</strong><br />
+<strong>Ans:</strong> WSGI stands for Web Server Gateway Interface. It is a standard specification (PEP 3333) that enables web servers (e.g., Nginx, Apache, Gunicorn) to communicate seamlessly with Python web application frameworks (such as Flask and Django).</p>
+<p><strong>Q2: What is the significance of passing <code>__name__</code> to the <code>Flask</code> constructor?</strong><br />
+<strong>Ans:</strong> <code>__name__</code> is a Python built-in variable pointing to the current module name. Flask uses it to determine the root path of the application to locate static files and templates relative to the project directory.</p>
+<p><strong>Q3: Why should <code>debug=True</code> never be used in a production deployment?</strong><br />
+<strong>Ans:</strong> Debug mode executes arbitrary code through the interactive browser-based debugger and reveals sensitive environment variables, secret keys, and filesystem structure upon encountering errors, creating a severe security vulnerability.</p>
+<p><strong>Q4: How does Flask convert a returned string into an HTTP response?</strong><br />
+<strong>Ans:</strong> When a view function returns a string, Flask automatically wraps it inside a <code>Response</code> object with an HTTP status code of 200, a MIME type of <code>text/html; charset=utf-8</code>, and appropriate content length headers.</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab Practical Examination 01: Full-Stack Notes Management System with Express.js, MongoDB Native Driver, and EJS | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Lab/Exam-01/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Lab Experiments</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Lab Practical Examination 01: Full-Stack Notes Management System with Express.js, MongoDB Native Driver, and EJS</h1>
+<h2>1. Aim</h2>
+<p>To architect and implement a full-stack, database-backed Notes Management web application using Node.js, Express.js, the official MongoDB native driver (<code>mongodb</code>), and EJS server-side templating to perform complete Create, Read, and Delete (CRUD) operations with server-side validation.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To establish asynchronous connection pooling to a local MongoDB database (<code>notes_lab</code>) using the native <code>MongoClient</code> class.</li>
+<li>To configure an Express.js application with EJS view engine and serve static stylesheets from a <code>public</code> directory.</li>
+<li>To implement server-side validation ensuring required fields (<code>title</code>, <code>content</code>) are non-empty before persistence.</li>
+<li>To perform document insertion (<code>insertOne</code>) with auto-generated timestamps and categorization.</li>
+<li>To query and sort documents chronologically (<code>find().sort({ createdAt: -1 })</code>) and render them into dynamic EJS card grids.</li>
+<li>To perform document deletion by unique MongoDB Object Identifier (<code>_id: new ObjectId(id)</code>).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Runtime Environment</strong>: Node.js (v18.x or higher)</li>
+<li><strong>Web Framework</strong>: Express.js (<code>^5.2.1</code>)</li>
+<li><strong>Database Driver</strong>: MongoDB Native Driver (<code>^7.6.0</code>)</li>
+<li><strong>Templating Engine</strong>: EJS (<code>^6.0.1</code>)</li>
+<li><strong>Database Server</strong>: MongoDB Community Server running at <code>mongodb://127.0.0.1:27017</code></li>
+<li><strong>Development Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Modern web applications frequently adopt a three-tier architecture comprising Presentation (HTML/CSS/EJS), Application Logic (Express.js), and Data Tier (MongoDB):</p>
+<ol>
+<li><strong>MongoDB Native Driver vs ODM</strong>:
+   Unlike higher-level ODMs (such as Mongoose), the official <code>mongodb</code> driver connects directly to the database engine using <code>MongoClient</code>, offering lower overhead and fine-grained control over BSON serialization, query cursors, and collection commands.</li>
+<li><strong>Document Identification (<code>ObjectId</code>)</strong>:
+   MongoDB automatically assigns each document a unique 12-byte hexadecimal identifier stored in the <code>_id</code> field. To query or delete an existing document by its string identifier, the string must be converted into a native BSON <code>ObjectId</code> instance via <code>new ObjectId(id)</code>.</li>
+<li><strong>Server-Side Validation</strong>:
+   Client-side validation can be bypassed; therefore, robust applications enforce validation on the server before mutating database state. If <code>title</code> or <code>content</code> is missing, the server re-renders the input form displaying descriptive error feedback without crashing.</li>
+<li><strong>Chronological Sorting</strong>:
+   In document querying, sorting by <code>{ createdAt: -1 }</code> orders results in descending order so that the most recent note appears first in the UI.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The application structure is organized in <code>Lab/Exam-01/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exam-01/package.json">package.json</a></strong>: Declares project dependencies <code>express</code>, <code>mongodb</code>, and <code>ejs</code>.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exam-01/server.js">server.js</a></strong>:
+  Main application entry point orchestrating database connectivity, middleware setup, and route handlers:</p>
+<ol>
+<li>
+<p><strong>Database Initialization</strong>:
+     ```javascript
+     const { MongoClient, ObjectId } = require("mongodb");
+     const mongoURL = "mongodb://127.0.0.1:27017";
+     const client = new MongoClient(mongoURL);
+     let notesCollection;</p>
+<p>async function connectDB() {
+     try {
+         await client.connect();
+         const database = client.db("notes_lab");
+         notesCollection = database.collection("notes");
+         console.log("Connected to MongoDB");
+         app.listen(PORT, () =&gt; {
+             console.log(<code>Server running at http://localhost:${PORT}</code>);
+         });
+     } catch (error) {
+         console.error("MongoDB connection failed:", error);
+     }
+ }
+ connectDB();
+ ```</p>
+</li>
+<li>
+<p><strong>View All Notes (<code>GET /</code>)</strong>:
+     Retrieves notes sorted newest-first and renders <code>views/index.ejs</code>:
+     <code>javascript
+     app.get("/", async (req, res) =&gt; {
+         try {
+             const notes = await notesCollection.find().sort({ createdAt: -1 }).toArray();
+             res.render("index", { notes });
+         } catch (error) {
+             res.status(500).send("Error retrieving notes");
+         }
+     });</code></p>
+</li>
+<li>
+<p><strong>Create Note Form and Action (<code>GET /notes/new</code> &amp; <code>POST /notes</code>)</strong>:
+     Validates inputs and saves document with creation timestamp:
+     <code>javascript
+     app.post("/notes", async (req, res) =&gt; {
+         const { title, content, category } = req.body;
+         if (!title || !title.trim() || !content || !content.trim()) {
+             return res.render("new", { error: "Title and content are required." });
+         }
+         await notesCollection.insertOne({
+             title: title.trim(),
+             content: content.trim(),
+             category: category ? category.trim() : "General",
+             createdAt: new Date()
+         });
+         res.redirect("/");
+     });</code></p>
+</li>
+<li>
+<p><strong>Delete Note (<code>POST /notes/:id/delete</code>)</strong>:
+     Parses string ID to <code>ObjectId</code> and removes document:
+     <code>javascript
+     app.post("/notes/:id/delete", async (req, res) =&gt; {
+         const id = req.params.id;
+         await notesCollection.deleteOne({ _id: new ObjectId(id) });
+         res.redirect("/");
+     });</code>
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exam-01/views/index.ejs">views/index.ejs</a></strong>:
+  Renders dashboard containing notes grid, category badges, creation timestamps, and individual delete buttons.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exam-01/views/new.ejs">views/new.ejs</a></strong>:
+  Renders note creation form with validation error banner and input fields for title, category, and content.
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Lab/Exam-01/public/style.css">public/style.css</a></strong>:
+  Provides clean card-based CSS styling, responsive grid layout, badge styles, and button hover states.</p>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Verify that MongoDB daemon is running locally on port 27017:
+   <code>bash
+   mongosh --eval "db.adminCommand('ping')"</code></li>
+<li>Navigate to the exam folder:
+   <code>bash
+   cd Lab/Exam-01</code></li>
+<li>Install dependencies:
+   <code>bash
+   npm install</code></li>
+<li>Start the server:
+   <code>bash
+   node server.js</code>
+   Confirm console output:
+   <code>Connected to MongoDB
+   Server running at http://localhost:3000</code></li>
+<li>Open <code>http://localhost:3000</code> in a web browser:
+   - Observe the empty state if no notes exist.
+   - Click <strong>+ Add Note</strong> to navigate to <code>http://localhost:3000/notes/new</code>.
+   - Attempt to submit an empty form to test validation error display.
+   - Enter a title, select a category, write content, and submit.
+   - Verify that the new note appears in the dashboard grid.
+   - Click the <strong>Delete</strong> button to verify note removal.</li>
+</ol>
+<h2>7. Output and Results</h2>
+<ul>
+<li><strong>Connection</strong>: Server connects cleanly to database <code>notes_lab</code> and listens on port 3000.</li>
+<li><strong>Empty State</strong>: Displays <em>"No notes available. Start by creating your first note."</em> with a CTA button.</li>
+<li><strong>Form Validation</strong>: Submitting blank inputs renders an alert: <em>"Title and content are required."</em></li>
+<li><strong>Note Rendering</strong>: Notes display with card layout, category badge (e.g., "College", "General"), formatted timestamp (<code>new Date().toLocaleString()</code>), and note content.</li>
+<li><strong>Deletion</strong>: Clicking Delete immediately deletes the record by <code>_id</code> and redirects to updated dashboard.</li>
+</ul>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Demonstrated ability to build a full-stack CRUD application during a timed practical examination.</li>
+<li>Mastered direct MongoDB native driver operations (<code>MongoClient</code>, <code>insertOne</code>, <code>find</code>, <code>deleteOne</code>).</li>
+<li>Handled BSON <code>ObjectId</code> instantiation and query matching.</li>
+<li>Implemented server-side form validation and dynamic template rendering with EJS.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Lab Practical Exam 01 successfully verifies the end-to-end integration of Node.js, Express.js, MongoDB native driver, and EJS. The application provides an intuitive user interface for managing notes with persistent database storage and error validation.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: Why is <code>new ObjectId(id)</code> required when deleting a document in MongoDB?</strong><br />
+<strong>Ans:</strong> MongoDB stores document <code>_id</code> fields as 12-byte BSON <code>ObjectId</code> binary types. A query matching a raw string against <code>_id</code> will fail; the string must first be converted into a BSON <code>ObjectId</code> instance.</p>
+<p><strong>Q2: What is the benefit of using <code>find().sort({ createdAt: -1 })</code>?</strong><br />
+<strong>Ans:</strong> The sort modifier orders documents in descending order of creation time at the database engine level, ensuring the newest records are served to the user without requiring client-side array sorting.</p>
+<p><strong>Q3: How does the MongoDB native driver differ from Mongoose?</strong><br />
+<strong>Ans:</strong> The native driver is the official low-level driver providing direct access to MongoDB commands without schema enforcement. Mongoose is an ODM built on top of the native driver that adds schema definitions, validation, and lifecycle hooks.</p>
+<p><strong>Q4: How does <code>app.use(express.static("public"))</code> serve assets?</strong><br />
+<strong>Ans:</strong> It configures static file middleware, allowing files located in the <code>public</code> directory (such as <code>style.css</code>) to be served directly to the browser at the root path (e.g., <code>/style.css</code>).</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>
