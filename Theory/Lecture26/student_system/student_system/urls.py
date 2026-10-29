@@ -1,8 +1,16 @@
+
 from django.contrib import admin
 from django.urls import path
 from students import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', views.index),
+    path("admin/", admin.site.urls),
+
+    path("", views.index, name="index"),
+    path("api/health/", views.health_check, name="health-check"),
+    path(
+        "api/students/<int:student_id>/",
+        views.student_detail,
+        name="student-detail",
+    ),
 ]

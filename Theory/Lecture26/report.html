@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theory Experiment 09: Web API Development with Django Framework | Backend Development</title>
+    <style>
+        :root {
+            --bg: #f5f5f3;
+            --card-bg: #ffffff;
+            --text-main: #111111;
+            --text-muted: #444444;
+            --text-subtle: #777777;
+            --border: #d8d8d4;
+            --accent: #2563eb;
+            --accent-soft: #eef2ff;
+            --code-bg: #1e1e24;
+            --code-text: #f4f4f5;
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text-main);
+            line-height: 1.65;
+            padding-bottom: 60px;
+        }
+        /* Top Navigation */
+        .top-nav {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: rgba(245, 245, 243, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+        }
+        .nav-container {
+            width: min(1000px, 92%);
+            margin: auto;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .brand {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-main);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .brand span {
+            color: var(--accent);
+        }
+        .nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: 0.2s ease;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: #ffffff;
+            color: var(--text-main);
+        }
+        .btn:hover {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary {
+            background: #111111;
+            color: #ffffff;
+            border-color: #111111;
+        }
+        .btn-primary:hover {
+            background: var(--accent);
+            border-color: var(--accent);
+        }
+
+        /* Document Wrapper */
+        .doc-wrapper {
+            width: min(1000px, 92%);
+            margin: 30px auto auto auto;
+        }
+        .breadcrumbs {
+            font-size: 13px;
+            color: var(--text-subtle);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .breadcrumbs a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 600;
+        }
+        .breadcrumbs a:hover {
+            text-decoration: underline;
+        }
+
+        /* Report Paper Card */
+        .report-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 48px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+        }
+        @media (max-width: 650px) {
+            .report-card {
+                padding: 24px;
+            }
+        }
+
+        /* Meta Banner */
+        .meta-banner {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            padding: 20px;
+            background: var(--accent-soft);
+            border-left: 4px solid var(--accent);
+            border-radius: 4px;
+            margin-bottom: 35px;
+        }
+        .meta-item span {
+            display: block;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 2px;
+            text-transform: uppercase;
+        }
+        .meta-item strong {
+            font-size: 13px;
+            color: var(--text-main);
+        }
+
+        /* Content Typography */
+        .report-card h1 {
+            font-size: clamp(24px, 4vw, 34px);
+            line-height: 1.25;
+            letter-spacing: -1px;
+            margin-bottom: 20px;
+            color: var(--text-main);
+        }
+        .report-card h2 {
+            font-size: 21px;
+            letter-spacing: -0.5px;
+            margin-top: 36px;
+            margin-bottom: 14px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-main);
+        }
+        .report-card h3 {
+            font-size: 17px;
+            margin-top: 24px;
+            margin-bottom: 10px;
+            color: var(--text-main);
+        }
+        .report-card p {
+            margin-bottom: 16px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card ul, .report-card ol {
+            margin-left: 24px;
+            margin-bottom: 18px;
+            color: var(--text-muted);
+            font-size: 15px;
+        }
+        .report-card li {
+            margin-bottom: 6px;
+        }
+        .report-card strong {
+            color: var(--text-main);
+        }
+
+        /* Tables */
+        .report-card table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+        .report-card th, .report-card td {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        .report-card th {
+            background: #f8f8f6;
+            font-weight: 700;
+            color: var(--text-main);
+        }
+        .report-card tr:nth-child(even) {
+            background: #fafaf8;
+        }
+
+        /* Code Blocks */
+        .code-container {
+            position: relative;
+            margin: 20px 0;
+        }
+        .report-card pre {
+            background: var(--code-bg);
+            color: var(--code-text);
+            padding: 18px;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+        .report-card code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 13px;
+        }
+        .report-card p code, .report-card li code {
+            background: #e9e9e6;
+            color: #b91c1c;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+
+        /* Images */
+        .report-card img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            margin: 16px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            display: block;
+        }
+
+        /* Blockquotes */
+        .report-card blockquote {
+            border-left: 4px solid var(--accent);
+            padding-left: 16px;
+            margin: 18px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        /* Footer inside report */
+        .report-footer {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .report-footer p {
+            font-size: 12px;
+            color: var(--text-subtle);
+            margin: 0;
+        }
+
+        /* Print styles */
+        @media print {
+            .top-nav, .breadcrumbs, .report-footer .btn {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+                padding: 0;
+            }
+            .doc-wrapper {
+                width: 100%;
+                margin: 0;
+            }
+            .report-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .report-card pre {
+                background: #f4f4f5;
+                color: #111111;
+                border: 1px solid #cccccc;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="top-nav">
+        <div class="nav-container">
+            <a href="../../index.html" class="brand">
+                AS<span>.</span> Backend
+            </a>
+            <div class="nav-actions">
+                <a href="../../index.html" class="btn">
+                    ← Back to Coursework
+                </a>
+                <button onclick="window.print()" class="btn">
+                    🖨️ Print Report
+                </button>
+                <a href="https://github.com/anujsharma32/Backend-Development/blob/main/Theory/Lecture26/report.md" target="_blank" rel="noopener noreferrer" class="btn btn-primary">
+                    View on GitHub ↗
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="doc-wrapper">
+        <nav class="breadcrumbs">
+            <a href="../../index.html">Home</a>
+            <span>/</span>
+            <span>Theory & Projects</span>
+            <span>/</span>
+            <span>Report</span>
+        </nav>
+
+        <article class="report-card">
+            <div class="meta-banner">
+                <div class="meta-item">
+                    <span>Student Name</span>
+                    <strong>Anuj Sharma</strong>
+                </div>
+                <div class="meta-item">
+                    <span>SAP ID</span>
+                    <strong>590018258</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Course</span>
+                    <strong>Backend Development</strong>
+                </div>
+                <div class="meta-item">
+                    <span>Institution</span>
+                    <strong>UPES Dehradun</strong>
+                </div>
+            </div>
+
+            <h1>Theory Experiment 09: Web API Development with Django Framework</h1>
+<h2>1. Aim</h2>
+<p>To study and implement a web application service using the Django full-stack web framework in Python, demonstrating Django project and application architecture, URL routing, view dispatching with <code>JsonResponse</code>, and database migration tracking.</p>
+<h2>2. Objectives</h2>
+<ul>
+<li>To understand the Model-View-Template (MVT) / Model-View-Controller (MVC) architectural pattern of the Django framework.</li>
+<li>To initialize a structured Django project (<code>student_system</code>) and modular application (<code>students</code>) using <code>django-admin</code> and <code>manage.py</code>.</li>
+<li>To configure application settings (<code>INSTALLED_APPS</code>, database configuration with SQLite) in <code>settings.py</code>.</li>
+<li>To implement URL routing in <code>urls.py</code> binding paths to controller view functions.</li>
+<li>To construct API view handlers returning structured JSON data via Django's built-in <code>JsonResponse</code>.</li>
+<li>To inspect and apply database migrations using Django CLI commands (<code>showmigrations</code>, <code>migrate</code>).</li>
+</ul>
+<h2>3. Requirements</h2>
+<ul>
+<li><strong>Language</strong>: Python (v3.10 or higher)</li>
+<li><strong>Framework</strong>: Django (<code>^5.0.0</code> or higher, as verified in environment screenshots)</li>
+<li><strong>Database</strong>: SQLite 3 (<code>db.sqlite3</code>)</li>
+<li><strong>Tools</strong>: Visual Studio Code, Web Browser, Terminal / CLI</li>
+</ul>
+<h2>4. Theory</h2>
+<p>Django is a high-level, batteries-included Python web framework that encourages rapid development and clean, pragmatic design:</p>
+<ol>
+<li><strong>Django Architectural Pattern (MVT)</strong>:
+   - <strong>Model</strong>: Python classes defining database schemas, fields, and relationships. Handled by the Django ORM.
+   - <strong>View</strong>: Business logic functions or classes that receive an <code>HttpRequest</code> object and return an <code>HttpResponse</code> (such as HTML or JSON).
+   - <strong>Template</strong>: Presentation layer for rendering dynamic HTML documents.
+   <em>(When acting as a pure API service, the Template layer is replaced by JSON serializers or <code>JsonResponse</code> objects).</em></li>
+<li><strong>Project vs Application</strong>:
+   - In Django, a <strong>Project</strong> represents the overarching website or system configuration containing global settings, database credentials, and root routing (<code>student_system/</code>).
+   - An <strong>Application</strong> represents a modular, self-contained functional component of the project (e.g., <code>students/</code>) that can be plugged into any Django project.</li>
+<li><strong>Database Migrations</strong>:
+   Django tracks model schema modifications through migration files (<code>makemigrations</code>), translating Python model changes into reproducible database schema alterations applied via <code>migrate</code>.</li>
+<li><strong><code>JsonResponse</code></strong>:
+   A subclass of <code>HttpResponse</code> that automatically serializes Python dictionaries into JSON format, setting the <code>Content-Type: application/json</code> header.</li>
+</ol>
+<h2>5. Implementation</h2>
+<p>The experiment artifacts reside in <code>Theory/Lecture26/</code>:
+- <strong><a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture26/student_system">student_system/</a></strong>:
+  Main Django project workspace:
+  1. <strong>Settings Configuration (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture26/student_system/student_system/settings.py">settings.py</a>)</strong>:
+     Registers the <code>students</code> app in <code>INSTALLED_APPS</code> and configures the default SQLite database:
+     <code>python
+     INSTALLED_APPS = [
+         'django.contrib.admin',
+         'django.contrib.auth',
+         'django.contrib.contenttypes',
+         'django.contrib.sessions',
+         'django.contrib.messages',
+         'django.contrib.staticfiles',
+         'students',
+     ]</code>
+  2. <strong>URL Routing (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture26/student_system/student_system/urls.py">urls.py</a>)</strong>:
+     Maps the root URL directly to the student index view handler:
+     ```python
+     from django.contrib import admin
+     from django.urls import path
+     from students import views</p>
+<pre><code> urlpatterns = [
+     path('admin/', admin.site.urls),
+     path('', views.index),
+ ]
+ ```
+</code></pre>
+<ol start="3">
+<li>
+<p><strong>View Handler (<a href="file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture26/student_system/students/views.py">students/views.py</a>)</strong>:
+     Implements the API endpoint returning system status:
+     ```python
+     from django.http import JsonResponse</p>
+<p>def index(request):
+     return JsonResponse({
+         "message": "Welcome to the Student Management API",
+         "version": "1.0",
+         "status": "running"
+     })
+ <code>``
+  4. **Database ([db.sqlite3](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture26/student_system/db.sqlite3))**:
+ SQLite database file storing project migration states.
+- **[Screenshots/](file:///Users/anujsharma/Desktop/Backend/Backend-Development/Theory/Lecture26/Screenshots)**:
+  -</code>01-django-version.png<code>: Verification of Django version installed in environment.
+  -</code>02-project-structure.png<code>: Project directory tree displaying</code>student_system<code>and</code>students<code>.
+  -</code>03-api-code.png<code>: View implementation returning structured JSON.
+  -</code>04-api-response.png<code>: Browser response displaying the live JSON API output.
+  -</code>05-migration-check.png<code>: CLI output of</code>showmigrations` confirming database setup.</p>
+</li>
+</ol>
+<h2>6. Procedure</h2>
+<ol>
+<li>Navigate to the Django project directory:
+   <code>bash
+   cd Theory/Lecture26/student_system</code></li>
+<li>Verify Django installation and version:
+   <code>bash
+   python3 -m django --version</code></li>
+<li>Check and apply database migrations:
+   <code>bash
+   python3 manage.py showmigrations
+   python3 manage.py migrate</code></li>
+<li>Start the Django development server:
+   <code>bash
+   python3 manage.py runserver 127.0.0.1:8000</code></li>
+<li>Open your web browser and navigate to:
+   <code>http://127.0.0.1:8000/</code></li>
+<li>Alternatively, test with cURL:
+   <code>bash
+   curl -i http://127.0.0.1:8000/</code></li>
+</ol>
+<h2>7. Output and Results</h2>
+<p>Based on code execution and verified against screenshot artifacts:
+- <strong>Version Check (<code>Screenshots/01-django-version.png</code>)</strong>:
+  Confirms active modern Django runtime environment.
+- <strong>Project Structure (<code>Screenshots/02-project-structure.png</code>)</strong>:
+  Validates directory hierarchy containing <code>manage.py</code>, project configuration package, and modular application directory.
+- <strong>Migration Verification (<code>Screenshots/05-migration-check.png</code>)</strong>:
+  <code>showmigrations</code> confirms all standard Django migrations (<code>admin</code>, <code>auth</code>, <code>contenttypes</code>, <code>sessions</code>) applied successfully (<code>[X]</code>).
+- <strong>API Response (<code>Screenshots/04-api-response.png</code>)</strong>:
+  HTTP GET to <code>http://127.0.0.1:8000/</code> returns:
+  - Status: <code>200 OK</code>
+  - Content-Type: <code>application/json</code>
+  - Body:
+    <code>json
+    {
+      "message": "Welcome to the Student Management API",
+      "version": "1.0",
+      "status": "running"
+    }</code></p>
+<h2>8. Learning Outcomes</h2>
+<ul>
+<li>Understood Django's batteries-included philosophy and modular project architecture.</li>
+<li>Learned the workflow of initializing Django projects and registering custom apps.</li>
+<li>Configured URL dispatchers and mapped requests to view controllers.</li>
+<li>Used <code>JsonResponse</code> to construct RESTful service endpoints without auxiliary serializer libraries.</li>
+<li>Managed database schemas using Django's migration engine.</li>
+</ul>
+<h2>9. Conclusion</h2>
+<p>Theory Experiment 09 demonstrates web API development with the Django framework. The experiment highlights Django's modularity, built-in migration management, and ease of routing, establishing it as a powerful framework for enterprise backend web applications.</p>
+<h2>10. Viva Questions</h2>
+<p><strong>Q1: What is the purpose of <code>manage.py</code> in a Django project?</strong><br />
+<strong>Ans:</strong> <code>manage.py</code> is a command-line utility created automatically with each Django project. It wraps <code>django-admin</code> while setting the <code>DJANGO_SETTINGS_MODULE</code> environment variable to point to the project's <code>settings.py</code>, allowing commands like <code>runserver</code>, <code>migrate</code>, and <code>createsuperuser</code> to be executed easily.</p>
+<p><strong>Q2: What is the difference between <code>makemigrations</code> and <code>migrate</code> in Django?</strong><br />
+<strong>Ans:</strong> <code>makemigrations</code> inspects models for changes and generates new migration scripts in the <code>migrations/</code> folder. <code>migrate</code> executes those migration files against the target database, altering the actual physical database schema.</p>
+<p><strong>Q3: How does <code>JsonResponse</code> differ from a standard <code>HttpResponse</code> in Django?</strong><br />
+<strong>Ans:</strong> <code>JsonResponse</code> is a subclass of <code>HttpResponse</code> that automatically serializes its data payload into JSON format using Python's <code>json.dumps()</code> and sets the HTTP <code>Content-Type</code> header to <code>application/json</code>.</p>
+<p><strong>Q4: What is the difference between a Django Project and a Django App?</strong><br />
+<strong>Ans:</strong> A project is the complete web application instance consisting of configuration, databases, and settings. An app is a portable, modular Python package within the project designed to perform a specific function (e.g., student management, payments, authentication).</p>
+
+            <footer class="report-footer">
+                <p>Backend Development Coursework • B.Tech CSE • UPES Dehradun</p>
+                <a href="../../index.html" class="btn">
+                    ← Back to Overview
+                </a>
+            </footer>
+        </article>
+    </main>
+
+</body>
+</html>
